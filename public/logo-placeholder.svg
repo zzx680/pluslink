@@ -1,0 +1,7 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 这是一个占位符logo，用户可以替换为自己的logo -->
+  <rect width="200" height="200" rx="40" fill="black"/>
+  <path d="M60 100L90 70L120 100L90 130L60 100Z" fill="white"/>
+  <path d="M90 70L120 100L150 70L120 40L90 70Z" fill="white" opacity="0.6"/>
+  <path d="M120 100L150 130L120 160L90 130L120 100Z" fill="white" opacity="0.3"/>
+</svg>
