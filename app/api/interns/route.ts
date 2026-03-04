@@ -14,7 +14,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.name || !body.education || !body.position || !body.internshipPeriod || !body.contact) {
+    if (!body.name || !body.education || !body.position || !body.internshipPeriod || !body.contact || !body.startDate || !body.baseLocation || !body.workType || !body.employmentType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     const intern = await addIntern(body);

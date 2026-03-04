@@ -8,7 +8,17 @@ export default function CompanyPage() {
   const [interns, setInterns] = useState<Intern[]>([]);
   const [showPostJob, setShowPostJob] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [jobForm, setJobForm] = useState({ companyName: '', title: '', description: '', requirements: '', contact: '' });
+  const [selectedIntern, setSelectedIntern] = useState<Intern | null>(null);
+  const [jobForm, setJobForm] = useState({
+    companyName: '',
+    title: '',
+    description: '',
+    requirements: '',
+    contact: '',
+    baseLocation: '',
+    workType: 'hybrid' as 'online' | 'offline' | 'hybrid',
+    employmentType: 'intern' as 'intern' | 'full-time'
+  });
 
   useEffect(() => { fetchInterns(); }, []);
 
@@ -34,7 +44,7 @@ export default function CompanyPage() {
       });
       if (response.ok) {
         alert('职位发布成功！');
-        setJobForm({ companyName: '', title: '', description: '', requirements: '', contact: '' });
+        setJobForm({ companyName: '', title: '', description: '', requirements: '', contact: '', baseLocation: '', workType: 'hybrid', employmentType: 'intern' });
         setShowPostJob(false);
       } else {
         alert('发布失败，请重试');
@@ -136,6 +146,45 @@ export default function CompanyPage() {
               </div>
 
               <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900 tracking-wide">Base地点 *</label>
+                <input
+                  type="text"
+                  required
+                  value={jobForm.baseLocation}
+                  onChange={(e) => setJobForm({ ...jobForm, baseLocation: e.target.value })}
+                  className="w-full px-5 py-4 border-2 border-gray-200 focus:border-black focus:outline-none transition-all duration-300 text-lg bg-gray-50 focus:bg-white"
+                  placeholder="例如：北京、上海、深圳"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900 tracking-wide">工作方式 *</label>
+                <select
+                  required
+                  value={jobForm.workType}
+                  onChange={(e) => setJobForm({ ...jobForm, workType: e.target.value as 'online' | 'offline' | 'hybrid' })}
+                  className="w-full px-5 py-4 border-2 border-gray-200 focus:border-black focus:outline-none transition-all duration-300 text-lg bg-gray-50 focus:bg-white"
+                >
+                  <option value="hybrid">混合办公</option>
+                  <option value="online">线上</option>
+                  <option value="offline">线下</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900 tracking-wide">职位类型 *</label>
+                <select
+                  required
+                  value={jobForm.employmentType}
+                  onChange={(e) => setJobForm({ ...jobForm, employmentType: e.target.value as 'intern' | 'full-time' })}
+                  className="w-full px-5 py-4 border-2 border-gray-200 focus:border-black focus:outline-none transition-all duration-300 text-lg bg-gray-50 focus:bg-white"
+                >
+                  <option value="intern">实习</option>
+                  <option value="full-time">全职</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-900 tracking-wide">联系方式 *</label>
                 <input
                   type="text"
@@ -182,7 +231,8 @@ export default function CompanyPage() {
                 {interns.map((intern, index) => (
                   <div
                     key={intern.id}
-                    className="group bg-white border-2 border-gray-100 p-8 hover:border-black hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                    onClick={() => setSelectedIntern(intern)}
+                    className="group bg-white border-2 border-gray-100 p-8 hover:border-black hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div className="flex items-start justify-between mb-6">
@@ -192,49 +242,24 @@ export default function CompanyPage() {
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse-subtle"></div>
                     </div>
 
-                    <h3 className="text-2xl font-bold mb-6 text-black group-hover:text-gray-900 transition-colors">
+                    <h3 className="text-2xl font-bold mb-2 text-black group-hover:text-gray-900 transition-colors">
                       {intern.name}
                     </h3>
 
-                    <div className="space-y-4 text-sm">
-                      <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-500 text-xs mb-1">学历</p>
-                          <p className="font-medium text-black">{intern.education}</p>
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-sm">{intern.position}</span>
+                    </div>
 
-                      <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <div className="mt-6 pt-4 border-t border-gray-100">
+                      <button className="text-sm text-black font-medium group-hover:underline flex items-center gap-2">
+                        查看完整名片
+                        <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        <div>
-                          <p className="text-gray-500 text-xs mb-1">实习岗位</p>
-                          <p className="font-medium text-black">{intern.position}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-500 text-xs mb-1">实习时间</p>
-                          <p className="font-medium text-black">{intern.internshipPeriod}</p>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-2 text-black font-medium">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-sm">{intern.contact}</span>
-                        </div>
-                      </div>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -243,6 +268,124 @@ export default function CompanyPage() {
           </div>
         )}
       </main>
+
+      {/* Intern Detail Modal */}
+      {selectedIntern && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in"
+          onClick={() => setSelectedIntern(null)}
+        >
+          <div
+            className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-black"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b-2 border-gray-100 p-8 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                  {selectedIntern.name.charAt(0)}
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-black">{selectedIntern.name}</h2>
+                  <p className="text-gray-600">{selectedIntern.position}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedIntern(null)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors duration-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-8 space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-gray-500 text-sm">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <span className="font-semibold">学历</span>
+                  </div>
+                  <p className="text-lg text-black pl-6">{selectedIntern.education}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-gray-500 text-sm">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="font-semibold">实习时间</span>
+                  </div>
+                  <p className="text-lg text-black pl-6">{selectedIntern.internshipPeriod}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-gray-500 text-sm">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="font-semibold">可入职时间</span>
+                  </div>
+                  <p className="text-lg text-black pl-6">{selectedIntern.startDate}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-gray-500 text-sm">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="font-semibold">Base地点</span>
+                  </div>
+                  <p className="text-lg text-black pl-6">{selectedIntern.baseLocation}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-gray-500 text-sm">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span className="font-semibold">工作方式</span>
+                  </div>
+                  <p className="text-lg text-black pl-6">
+                    {selectedIntern.workType === 'online' ? '线上' : selectedIntern.workType === 'offline' ? '线下' : '混合办公'}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-gray-500 text-sm">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span className="font-semibold">职位类型</span>
+                  </div>
+                  <p className="text-lg text-black pl-6">
+                    {selectedIntern.employmentType === 'intern' ? '实习' : '全职'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t-2 border-gray-100">
+                <div className="flex items-center gap-3 p-6 bg-gray-50 border-2 border-gray-200">
+                  <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">联系方式</p>
+                    <p className="text-xl font-semibold text-black">{selectedIntern.contact}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

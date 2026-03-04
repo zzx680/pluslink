@@ -8,7 +8,17 @@ export default function InternPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [showSubmitCard, setShowSubmitCard] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cardForm, setCardForm] = useState({ name: '', education: '', position: '', internshipPeriod: '', contact: '' });
+  const [cardForm, setCardForm] = useState({
+    name: '',
+    education: '',
+    position: '',
+    internshipPeriod: '',
+    contact: '',
+    startDate: '',
+    baseLocation: '',
+    workType: 'hybrid' as 'online' | 'offline' | 'hybrid',
+    employmentType: 'intern' as 'intern' | 'full-time'
+  });
 
   useEffect(() => { fetchJobs(); }, []);
 
@@ -34,7 +44,7 @@ export default function InternPage() {
       });
       if (response.ok) {
         alert('名片卡提交成功！');
-        setCardForm({ name: '', education: '', position: '', internshipPeriod: '', contact: '' });
+        setCardForm({ name: '', education: '', position: '', internshipPeriod: '', contact: '', startDate: '', baseLocation: '', workType: 'hybrid', employmentType: 'intern' });
         setShowSubmitCard(false);
       } else {
         alert('提交失败，请重试');
@@ -136,6 +146,57 @@ export default function InternPage() {
               </div>
 
               <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900 tracking-wide">可入职时间 *</label>
+                <input
+                  type="text"
+                  required
+                  value={cardForm.startDate}
+                  onChange={(e) => setCardForm({ ...cardForm, startDate: e.target.value })}
+                  className="w-full px-5 py-4 border-2 border-gray-200 focus:border-black focus:outline-none transition-all duration-300 text-lg bg-gray-50 focus:bg-white"
+                  placeholder="例如：随时、1个月后、2026年4月"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900 tracking-wide">Base地点 *</label>
+                <input
+                  type="text"
+                  required
+                  value={cardForm.baseLocation}
+                  onChange={(e) => setCardForm({ ...cardForm, baseLocation: e.target.value })}
+                  className="w-full px-5 py-4 border-2 border-gray-200 focus:border-black focus:outline-none transition-all duration-300 text-lg bg-gray-50 focus:bg-white"
+                  placeholder="例如：北京、上海、深圳"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900 tracking-wide">工作方式 *</label>
+                <select
+                  required
+                  value={cardForm.workType}
+                  onChange={(e) => setCardForm({ ...cardForm, workType: e.target.value as 'online' | 'offline' | 'hybrid' })}
+                  className="w-full px-5 py-4 border-2 border-gray-200 focus:border-black focus:outline-none transition-all duration-300 text-lg bg-gray-50 focus:bg-white"
+                >
+                  <option value="hybrid">混合办公</option>
+                  <option value="online">线上</option>
+                  <option value="offline">线下</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900 tracking-wide">期望职位类型 *</label>
+                <select
+                  required
+                  value={cardForm.employmentType}
+                  onChange={(e) => setCardForm({ ...cardForm, employmentType: e.target.value as 'intern' | 'full-time' })}
+                  className="w-full px-5 py-4 border-2 border-gray-200 focus:border-black focus:outline-none transition-all duration-300 text-lg bg-gray-50 focus:bg-white"
+                >
+                  <option value="intern">实习</option>
+                  <option value="full-time">全职</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-900 tracking-wide">联系方式 *</label>
                 <input
                   type="text"
@@ -194,8 +255,26 @@ export default function InternPage() {
                           <span className="px-3 py-1 bg-black text-white text-xs font-medium tracking-wider">
                             NEW
                           </span>
+                          <span className={`px-3 py-1 text-xs font-medium tracking-wider ${job.employmentType === 'intern' ? 'bg-gray-100 text-gray-800' : 'bg-black text-white'}`}>
+                            {job.employmentType === 'intern' ? '实习' : '全职'}
+                          </span>
                         </div>
-                        <p className="text-xl text-gray-600 font-medium">{job.companyName}</p>
+                        <p className="text-xl text-gray-600 font-medium mb-3">{job.companyName}</p>
+                        <div className="flex items-center gap-6 text-sm text-gray-500">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>{job.baseLocation}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span>{job.workType === 'online' ? '线上' : job.workType === 'offline' ? '线下' : '混合办公'}</span>
+                          </div>
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-gray-400">
