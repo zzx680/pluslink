@@ -14,9 +14,7 @@ export async function POST(request: Request) {
     const isValid = await validateInviteCode(code, 'admin');
 
     if (isValid) {
-      // 标记邀请码为已使用
-      await useInviteCode(code, 'admin', 'admin-user');
-
+      // 管理员邀请码可重复使用，不标记为已使用
       // 返回成功，并设置 session token
       const response = NextResponse.json({
         valid: true,

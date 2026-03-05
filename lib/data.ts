@@ -150,7 +150,7 @@ export async function useInviteCode(code: string, type: 'company' | 'intern' | '
   return true;
 }
 
-export async function createInviteCode(type: 'company' | 'intern'): Promise<InviteCode> {
+export async function createInviteCode(type: 'company' | 'intern' | 'admin'): Promise<InviteCode> {
   if (typeof window !== 'undefined') throw new Error('Cannot create invite code on client');
   const fs = await import('fs/promises');
   const path = await import('path');

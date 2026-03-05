@@ -14,7 +14,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { type } = await request.json();
-    if (!type || (type !== 'company' && type !== 'intern')) {
+    if (!type || (type !== 'company' && type !== 'intern' && type !== 'admin')) {
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
     const newCode = await createInviteCode(type);

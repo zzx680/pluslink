@@ -92,16 +92,6 @@ export default function AdminLoginPage() {
             </Link>
           </div>
         </form>
-
-        <div className="mt-8 p-6 bg-white rounded-[16px] border-2 border-[#e5e5e5]">
-          <h3 className="text-[16px] font-semibold text-black mb-3">💡 提示</h3>
-          <ul className="text-[14px] text-[#666666] space-y-2">
-            <li>• 管理员邀请码由系统管理员生成</li>
-            <li>• 每个邀请码只能使用一次</li>
-            <li>• 登录后 7 天内有效</li>
-            <li>• 默认邀请码：ADMIN2025</li>
-          </ul>
-        </div>
       </div>
     </div>
   );
