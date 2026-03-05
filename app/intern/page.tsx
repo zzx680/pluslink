@@ -1,13 +1,99 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Job } from '@/lib/types';
+import { useRouter } from 'next/navigation';
+import { Job, Intern } from '@/lib/types';
+import Button from '@/components/Button';
+
+const WORK_TYPE_LABEL = { online: '线上', offline: '线下', hybrid: '混合办公' };
+
+function JobCard({ job }: { job: Job }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-300 transition-all duration-200">
+      {/* 收起状态：一行摘要 */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="btn w-full px-5 py-4 flex items-center gap-4 text-left hover:bg-gray-50 transition-colors duration-150"
+      >
+        {/* 公司首字母 */}
+        <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 text-sm font-semibold shrink-0">
+          {job.companyName.charAt(0)}
+        </div>
+
+        {/* 职位信息 */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-sm font-semibold text-gray-900">{job.title}</span>
+            <span className={`px-2 py-0.5 text-xs font-medium rounded-full shrink-0 ${
+              job.employmentType === 'intern' ? 'bg-gray-100 text-gray-600' : 'bg-gray-900 text-white'
+            }`}>
+              {job.employmentType === 'intern' ? '实习' : '全职'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span>{job.companyName}</span>
+            <span>·</span>
+            <span>{job.baseLocation}</span>
+            <span>·</span>
+            <span>{WORK_TYPE_LABEL[job.workType]}</span>
+          </div>
+        </div>
+
+        {/* 展开箭头 */}
+        <svg
+          className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* 展开详情 */}
+      {expanded && (
+        <div className="px-5 pb-5 border-t border-gray-100 animate-[fade-in_0.2s_ease-out]">
+          <div className="pt-4 space-y-4">
+            <div>
+              <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">职位描述</h4>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{job.description}</p>
+            </div>
+            <div className="border-t border-gray-100 pt-4">
+              <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">任职要求</h4>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{job.requirements}</p>
+            </div>
+            <div className="border-t border-gray-100 pt-4">
+              <div className="bg-gray-900 rounded-xl px-4 py-3">
+                <div className="text-xs text-gray-400 mb-1">联系方式</div>
+                <div className="text-sm font-semibold text-white">{job.contact}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function InternPage() {
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [showSubmitCard, setShowSubmitCard] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [resumeUrl, setResumeUrl] = useState('');
+  const [search, setSearch] = useState('');
+  const [filterEmployment, setFilterEmployment] = useState<'all' | 'intern' | 'full-time'>('all');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentIntern, setCurrentIntern] = useState<Intern | null>(null);
+  const [checkingIntern, setCheckingIntern] = useState(true);
+
   const [cardForm, setCardForm] = useState({
     name: '',
     education: '',
@@ -17,10 +103,45 @@ export default function InternPage() {
     startDate: '',
     baseLocation: '',
     workType: 'hybrid' as 'online' | 'offline' | 'hybrid',
-    employmentType: 'intern' as 'intern' | 'full-time'
+    employmentType: 'intern' as 'intern' | 'full-time' | 'both'
   });
 
-  useEffect(() => { fetchJobs(); }, []);
+  useEffect(() => {
+    fetchJobs();
+    checkExistingIntern();
+  }, []);
+
+  const checkExistingIntern = async () => {
+    const inviteCode = sessionStorage.getItem('inviteCode');
+    if (!inviteCode) {
+      setCheckingIntern(false);
+      return;
+    }
+    try {
+      const response = await fetch(`/api/interns/by-invite?code=${inviteCode}`);
+      const intern: Intern | null = await response.json();
+      if (intern) {
+        setCurrentIntern(intern);
+        setIsEditMode(true);
+        setCardForm({
+          name: intern.name,
+          education: intern.education,
+          position: intern.position,
+          internshipPeriod: intern.internshipPeriod,
+          contact: intern.contact,
+          startDate: intern.startDate,
+          baseLocation: intern.baseLocation,
+          workType: intern.workType,
+          employmentType: intern.employmentType
+        });
+        if (intern.resumeUrl) setResumeUrl(intern.resumeUrl);
+      }
+    } catch (error) {
+      console.error('Failed to check intern:', error);
+    } finally {
+      setCheckingIntern(false);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -34,240 +155,337 @@ export default function InternPage() {
     }
   };
 
-  const handleSubmitCard = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setUploadError('只支持 PDF 文件');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('文件大小不能超过 5MB');
+      return;
+    }
+
+    setUploadError('');
+    setResumeFile(file);
+    setUploading(true);
+
     try {
-      const response = await fetch('/api/interns', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cardForm)
-      });
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/upload/resume', { method: 'POST', body: formData });
+      const data = await response.json();
       if (response.ok) {
-        alert('名片卡提交成功！');
-        setCardForm({ name: '', education: '', position: '', internshipPeriod: '', contact: '', startDate: '', baseLocation: '', workType: 'hybrid', employmentType: 'intern' });
-        setShowSubmitCard(false);
+        setResumeUrl(data.resumeUrl);
       } else {
-        alert('提交失败，请重试');
+        setUploadError(data.error || '上传失败，请重试');
+        setResumeFile(null);
       }
-    } catch (error) {
-      console.error('Failed to submit card:', error);
-      alert('提交失败，请重试');
+    } catch {
+      setUploadError('上传失败，请重试');
+      setResumeFile(null);
+    } finally {
+      setUploading(false);
     }
   };
 
+  const handleSubmitCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const inviteCode = sessionStorage.getItem('inviteCode');
+    if (!inviteCode) {
+      alert('邀请码信息丢失，请重新登录');
+      router.push('/');
+      return;
+    }
+
+    try {
+      if (isEditMode && currentIntern) {
+        const response = await fetch(`/api/interns/${currentIntern.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...cardForm, resumeUrl: resumeUrl || undefined })
+        });
+        if (response.ok) {
+          alert('名片卡更新成功！');
+          setShowSubmitCard(false);
+        } else {
+          alert('更新失败，请重试');
+        }
+      } else {
+        const response = await fetch('/api/interns', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...cardForm, inviteCode, resumeUrl: resumeUrl || undefined })
+        });
+        if (response.ok) {
+          const newIntern = await response.json();
+          setCurrentIntern(newIntern);
+          setIsEditMode(true);
+          alert('名片卡提交成功！');
+          setShowSubmitCard(false);
+        } else {
+          alert('提交失败，请重试');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to submit card:', error);
+      alert('操作失败，请重试');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const inputClass = "w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none transition-all duration-200 text-gray-900 hover:border-gray-300";
+
+  if (checkingIntern) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <span className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
-      <header className="bg-white border-b border-[#e5e5e5]">
-        <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-          <Link href="/" className="text-[20px] font-semibold text-black">
+    <div className="min-h-screen bg-white">
+      <header className="border-b border-gray-200">
+        <div className="max-w-5xl mx-auto px-8 py-4 flex items-center justify-between">
+          <Link href="/" className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-colors duration-200">
             Pluslink
           </Link>
-          <span className="px-4 py-2 bg-black text-white text-[16px] font-semibold rounded-[8px]">实习生端</span>
+          <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">实习生端</span>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-8 py-16">
-        <div className="mb-16 flex items-end justify-between">
+      <main className="max-w-5xl mx-auto px-8 py-10">
+        <div className="mb-6 flex items-center justify-between animate-[fade-in_0.4s_ease-out]">
           <div>
-            <h1 className="text-[48px] font-bold text-black mb-2">
-              {showSubmitCard ? '提交名片卡' : '招聘职位'}
+            <h1 className="text-2xl font-semibold text-gray-900">
+              {showSubmitCard ? (isEditMode ? '编辑名片卡' : '提交名片卡') : '招聘职位'}
             </h1>
-            <p className="text-[16px] text-[#666666]">
-              {showSubmitCard ? '填写个人信息，让企业发现你' : `共 ${jobs.length} 个职位机会`}
+            <p className="text-sm text-gray-500 mt-0.5">
+              {showSubmitCard
+                ? (isEditMode ? '修改个人信息，让企业发现你' : '填写个人信息，让企业发现你')
+                : `${jobs.filter(j => {
+                    const matchSearch = !search || j.title.includes(search) || j.companyName.includes(search) || j.baseLocation.includes(search);
+                    const matchEmployment = filterEmployment === 'all' || j.employmentType === filterEmployment;
+                    return matchSearch && matchEmployment;
+                  }).length} / ${jobs.length} 个职位机会`}
             </p>
           </div>
-          <button
-            onClick={() => setShowSubmitCard(!showSubmitCard)}
-            className="px-8 py-4 bg-black text-white text-[16px] font-semibold rounded-[16px] hover:bg-[#333] transition-all"
-          >
-            {showSubmitCard ? '返回查看' : '提交名片卡'}
-          </button>
+          <Button onClick={() => setShowSubmitCard(!showSubmitCard)}>
+            {showSubmitCard ? '返回查看' : (isEditMode ? '编辑名片卡' : '提交名片卡')}
+          </Button>
         </div>
 
         {showSubmitCard ? (
-          <div className="max-w-3xl">
-            <form onSubmit={handleSubmitCard} className="bg-white rounded-[16px] p-12 shadow-sm space-y-8">
-              <div className="space-y-2">
-                <label className="block text-[16px] font-semibold text-black">姓名</label>
-                <input
-                  type="text"
-                  required
-                  value={cardForm.name}
+          <div className="max-w-2xl animate-[fade-in_0.3s_ease-out]">
+            <form onSubmit={handleSubmitCard} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">姓名</label>
+                <input type="text" required value={cardForm.name}
                   onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  placeholder="请输入您的姓名"
-                />
+                  className={inputClass} placeholder="请输入您的姓名" />
               </div>
-
               <div className="space-y-2">
-                <label className="block text-[16px] font-semibold text-black">学历</label>
-                <input
-                  type="text"
-                  required
-                  value={cardForm.education}
+                <label className="block text-sm font-medium text-gray-700">学历</label>
+                <input type="text" required value={cardForm.education}
                   onChange={(e) => setCardForm({ ...cardForm, education: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  placeholder="例如：北京大学 计算机科学 本科"
-                />
+                  className={inputClass} placeholder="例如：北京大学 计算机科学 本科" />
               </div>
-
               <div className="space-y-2">
-                <label className="block text-[16px] font-semibold text-black">奇绩实习岗位</label>
-                <input
-                  type="text"
-                  required
-                  value={cardForm.position}
+                <label className="block text-sm font-medium text-gray-700">奇绩实习岗位</label>
+                <input type="text" required value={cardForm.position}
                   onChange={(e) => setCardForm({ ...cardForm, position: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  placeholder="例如：前端开发实习生"
-                />
+                  className={inputClass} placeholder="例如：前端开发实习生" />
               </div>
-
               <div className="space-y-2">
-                <label className="block text-[16px] font-semibold text-black">实习时间</label>
-                <input
-                  type="text"
-                  required
-                  value={cardForm.internshipPeriod}
-                  onChange={(e) => setCardForm({ ...cardForm, internshipPeriod: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  placeholder="例如：2024年1月 - 2024年6月"
-                />
+                <label className="block text-sm font-medium text-gray-700">实习时间</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">开始时间</label>
+                    <input
+                      type="month"
+                      required
+                      value={cardForm.internshipPeriod.split(' - ')[0] || ''}
+                      onChange={(e) => {
+                        const end = cardForm.internshipPeriod.split(' - ')[1] || '';
+                        setCardForm({ ...cardForm, internshipPeriod: `${e.target.value}${end ? ' - ' + end : ''}` });
+                      }}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">结束时间</label>
+                    <input
+                      type="month"
+                      required
+                      value={cardForm.internshipPeriod.split(' - ')[1] || ''}
+                      onChange={(e) => {
+                        const start = cardForm.internshipPeriod.split(' - ')[0] || '';
+                        setCardForm({ ...cardForm, internshipPeriod: `${start} - ${e.target.value}` });
+                      }}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
               </div>
-
               <div className="space-y-2">
-                <label className="block text-[16px] font-semibold text-black">可入职时间</label>
-                <input
-                  type="text"
-                  required
-                  value={cardForm.startDate}
+                <label className="block text-sm font-medium text-gray-700">可入职时间</label>
+                <input type="text" required value={cardForm.startDate}
                   onChange={(e) => setCardForm({ ...cardForm, startDate: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  placeholder="例如：随时、1个月后、2026年4月"
-                />
+                  className={inputClass} placeholder="例如：随时、1个月后、2026年4月" />
               </div>
-
               <div className="space-y-2">
-                <label className="block text-[16px] font-semibold text-black">Base地点</label>
-                <input
-                  type="text"
-                  required
-                  value={cardForm.baseLocation}
+                <label className="block text-sm font-medium text-gray-700">Base地点</label>
+                <input type="text" required value={cardForm.baseLocation}
                   onChange={(e) => setCardForm({ ...cardForm, baseLocation: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  placeholder="例如：北京、上海、深圳"
-                />
+                  className={inputClass} placeholder="例如：北京、上海、深圳" />
               </div>
-
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="block text-[16px] font-semibold text-black">工作方式</label>
-                  <select
-                    required
-                    value={cardForm.workType}
+                  <label className="block text-sm font-medium text-gray-700">工作方式</label>
+                  <select required value={cardForm.workType}
                     onChange={(e) => setCardForm({ ...cardForm, workType: e.target.value as 'online' | 'offline' | 'hybrid' })}
-                    className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  >
+                    className={inputClass}>
                     <option value="hybrid">混合办公</option>
                     <option value="online">线上</option>
                     <option value="offline">线下</option>
                   </select>
                 </div>
-
                 <div className="space-y-2">
-                  <label className="block text-[16px] font-semibold text-black">期望职位类型</label>
-                  <select
-                    required
-                    value={cardForm.employmentType}
-                    onChange={(e) => setCardForm({ ...cardForm, employmentType: e.target.value as 'intern' | 'full-time' })}
-                    className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  >
+                  <label className="block text-sm font-medium text-gray-700">期望职位类型</label>
+                  <select required value={cardForm.employmentType}
+                    onChange={(e) => setCardForm({ ...cardForm, employmentType: e.target.value as 'intern' | 'full-time' | 'both' })}
+                    className={inputClass}>
                     <option value="intern">实习</option>
                     <option value="full-time">全职</option>
+                    <option value="both">实习或全职都可以</option>
                   </select>
                 </div>
               </div>
-
               <div className="space-y-2">
-                <label className="block text-[16px] font-semibold text-black">联系方式</label>
-                <input
-                  type="text"
-                  required
-                  value={cardForm.contact}
+                <label className="block text-sm font-medium text-gray-700">联系方式</label>
+                <input type="text" required value={cardForm.contact}
                   onChange={(e) => setCardForm({ ...cardForm, contact: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-[#e5e5e5] rounded-[16px] focus:border-black focus:outline-none transition-all text-[16px] bg-[#f7f7f7] focus:bg-white"
-                  placeholder="邮箱或微信"
-                />
+                  className={inputClass} placeholder="手机号或微信" />
               </div>
 
-              <button
-                type="submit"
-                className="w-full px-8 py-4 bg-black text-white text-[16px] font-semibold rounded-[16px] hover:bg-[#333] transition-all"
-              >
-                提交名片卡
-              </button>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  上传简历
+                  <span className="ml-1.5 text-xs font-normal text-gray-400">PDF · 最大 5MB · 选填</span>
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                {!resumeFile && !resumeUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="btn w-full px-4 py-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex flex-col items-center gap-2"
+                  >
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16v-8m0 0l-3 3m3-3l3 3M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1" />
+                    </svg>
+                    <span className="text-sm text-gray-500">点击选择 PDF 文件</span>
+                  </button>
+                ) : (
+                  <div className={`flex items-center gap-3 px-4 py-3 border rounded-xl transition-all duration-200 ${
+                    uploading ? 'border-gray-200 bg-gray-50' : uploadError ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
+                  }`}>
+                    <svg className={`w-5 h-5 shrink-0 ${uploading ? 'text-gray-400' : uploadError ? 'text-red-500' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-sm text-gray-700 flex-1 truncate">{resumeFile?.name || '已上传的简历'}</span>
+                    {uploading ? (
+                      <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin shrink-0" />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => { setResumeFile(null); setResumeUrl(''); setUploadError(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                        className="btn w-6 h-6 flex items-center justify-center hover:bg-white rounded-full transition-colors shrink-0"
+                      >
+                        <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+                {uploadError && (
+                  <p className="text-xs text-red-500 animate-[fade-in_0.2s_ease-out]">{uploadError}</p>
+                )}
+              </div>
+              <Button type="submit" loading={submitting} className="w-full">
+                {submitting ? (isEditMode ? '保存中' : '提交中') : (isEditMode ? '保存修改' : '提交名片卡')}
+              </Button>
             </form>
           </div>
         ) : (
-          <div>
+          <div className="animate-[fade-in_0.4s_ease-out]">
+            {/* 搜索 + 筛选栏 */}
+            {!loading && jobs.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+                <div className="relative flex-1 min-w-64">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="搜索职位、公司、城市..."
+                    className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none transition-all duration-200 text-gray-900"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">职位类型</span>
+                  {[
+                    { value: 'all' as const, label: '全部' },
+                    { value: 'intern' as const, label: '实习' },
+                    { value: 'full-time' as const, label: '全职' },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => setFilterEmployment(value)}
+                      className={`btn px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-150 ${
+                        filterEmployment === value ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {loading ? (
               <div className="flex items-center justify-center py-32">
-                <div className="text-[16px] text-[#666666]">加载中...</div>
+                <span className="w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
               </div>
             ) : jobs.length === 0 ? (
-              <div className="text-center py-32 bg-white rounded-[16px] border-2 border-dashed border-[#e5e5e5]">
-                <p className="text-[16px] text-[#666666]">暂无招聘职位</p>
+              <div className="text-center py-32 border-2 border-dashed border-gray-200 rounded-2xl">
+                <p className="text-sm text-gray-500">暂无招聘职位</p>
               </div>
             ) : (
-              <div className="space-y-8">
-                {jobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="bg-white rounded-[16px] p-12 shadow-sm hover:shadow-md transition-all"
-                  >
-                    <div className="flex items-start justify-between mb-8">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-4 mb-3">
-                          <h3 className="text-[32px] font-bold text-black">
-                            {job.title}
-                          </h3>
-                          <span className={`px-3 py-1 text-[16px] font-semibold rounded-[8px] ${job.employmentType === 'intern' ? 'bg-[#f7f7f7] text-black' : 'bg-black text-white'}`}>
-                            {job.employmentType === 'intern' ? '实习' : '全职'}
-                          </span>
-                        </div>
-                        <p className="text-[20px] text-[#666666] font-semibold mb-4">{job.companyName}</p>
-                        <div className="flex items-center gap-6 text-[16px] text-[#666666]">
-                          <span>{job.baseLocation}</span>
-                          <span>·</span>
-                          <span>{job.workType === 'online' ? '线上' : job.workType === 'offline' ? '线下' : '混合办公'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-8">
-                      <div>
-                        <h4 className="text-[20px] font-semibold text-black mb-4">职位描述</h4>
-                        <p className="text-[16px] text-[#666666] leading-relaxed whitespace-pre-wrap">
-                          {job.description}
-                        </p>
-                      </div>
-
-                      <div className="border-t border-[#e5e5e5] pt-8">
-                        <h4 className="text-[20px] font-semibold text-black mb-4">任职要求</h4>
-                        <p className="text-[16px] text-[#666666] leading-relaxed whitespace-pre-wrap">
-                          {job.requirements}
-                        </p>
-                      </div>
-
-                      <div className="pt-8 border-t border-[#e5e5e5]">
-                        <div className="bg-[#f7f7f7] rounded-[16px] p-6">
-                          <div className="text-[16px] text-[#666666] mb-2">联系方式</div>
-                          <div className="text-[20px] font-semibold text-black">{job.contact}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-2">
+                {jobs
+                  .filter(j => {
+                    const matchSearch = !search || j.title.includes(search) || j.companyName.includes(search) || j.baseLocation.includes(search);
+                    const matchEmployment = filterEmployment === 'all' || j.employmentType === filterEmployment;
+                    return matchSearch && matchEmployment;
+                  })
+                  .map((job) => (
+                    <JobCard key={job.id} job={job} />
+                  ))}
               </div>
             )}
           </div>
@@ -276,4 +494,3 @@ export default function InternPage() {
     </div>
   );
 }
-

@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "lsof -ti:3000 | xargs kill -9 2>/dev/null; rm -rf .next && next dev",
+    "kill:dev": "lsof -ti:3000 | xargs kill -9 2>/dev/null || echo 'No process on port 3000'",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

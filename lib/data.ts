@@ -38,6 +38,7 @@ export async function initializeData() {
         const defaultCodes: InviteCode[] = [
           { code: 'COMPANY2025', type: 'company', used: false, createdAt: new Date().toISOString() },
           { code: 'INTERN2025', type: 'intern', used: false, createdAt: new Date().toISOString() },
+          { code: 'ADMIN2025', type: 'admin', used: false, createdAt: new Date().toISOString() }, // 默认管理员邀请码
         ];
         await fs.writeFile(inviteCodesPath, JSON.stringify(defaultCodes, null, 2));
       }
@@ -70,6 +71,24 @@ export async function addIntern(intern: Omit<Intern, 'id' | 'createdAt'>): Promi
   interns.push(newIntern);
   await fs.writeFile(filePath, JSON.stringify(interns, null, 2));
   return newIntern;
+}
+
+export async function getInternByInviteCode(inviteCode: string): Promise<Intern | null> {
+  const interns = await getInterns();
+  return interns.find(i => i.inviteCode === inviteCode) ?? null;
+}
+
+export async function updateIntern(id: string, updates: Partial<Omit<Intern, 'id' | 'inviteCode' | 'createdAt'>>): Promise<Intern | null> {
+  if (typeof window !== 'undefined') throw new Error('Cannot update intern on client');
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  const filePath = path.join(process.cwd(), 'data', 'interns.json');
+  const interns = await getInterns();
+  const index = interns.findIndex(i => i.id === id);
+  if (index === -1) return null;
+  interns[index] = { ...interns[index], ...updates };
+  await fs.writeFile(filePath, JSON.stringify(interns, null, 2));
+  return interns[index];
 }
 
 export async function getJobs(): Promise<Job[]> {
@@ -110,13 +129,13 @@ export async function getInviteCodes(): Promise<InviteCode[]> {
   }
 }
 
-export async function validateInviteCode(code: string, type: 'company' | 'intern'): Promise<boolean> {
+export async function validateInviteCode(code: string, type: 'company' | 'intern' | 'admin'): Promise<boolean> {
   const codes = await getInviteCodes();
   const inviteCode = codes.find(c => c.code === code && c.type === type);
   return inviteCode !== undefined && !inviteCode.used;
 }
 
-export async function useInviteCode(code: string, type: 'company' | 'intern', usedBy: string): Promise<boolean> {
+export async function useInviteCode(code: string, type: 'company' | 'intern' | 'admin', usedBy: string): Promise<boolean> {
   if (typeof window !== 'undefined') throw new Error('Cannot use invite code on client');
   const fs = await import('fs/promises');
   const path = await import('path');
