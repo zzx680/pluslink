@@ -1,4 +1,4 @@
-import { Intern, Job, InviteCode } from './types';
+import { Intern, Job, InviteCode, ProfileView } from './types';
 
 // 数据存储路径
 const DATA_DIR = '/data';
@@ -132,6 +132,10 @@ export async function getInviteCodes(): Promise<InviteCode[]> {
 export async function validateInviteCode(code: string, type: 'company' | 'intern' | 'admin'): Promise<boolean> {
   const codes = await getInviteCodes();
   const inviteCode = codes.find(c => c.code === code && c.type === type);
+  // 管理员邀请码可重复使用，不检查 used 状态
+  if (type === 'admin') {
+    return inviteCode !== undefined;
+  }
   return inviteCode !== undefined && !inviteCode.used;
 }
 
@@ -177,4 +181,45 @@ export async function deleteInviteCode(code: string): Promise<boolean> {
   if (filteredCodes.length === codes.length) return false;
   await fs.writeFile(filePath, JSON.stringify(filteredCodes, null, 2));
   return true;
+}
+
+export async function getProfileViews(internId: string): Promise<ProfileView[]> {
+  if (typeof window !== 'undefined') return [];
+  try {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const filePath = path.join(process.cwd(), 'data', 'profile-views.json');
+    const content = await fs.readFile(filePath, 'utf-8');
+    const all: ProfileView[] = JSON.parse(content);
+    return all.filter(v => v.internId === internId).sort((a, b) => new Date(b.viewedAt).getTime() - new Date(a.viewedAt).getTime());
+  } catch {
+    return [];
+  }
+}
+
+export async function addProfileView(internId: string, viewerName: string): Promise<void> {
+  if (typeof window !== 'undefined') return;
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  const filePath = path.join(process.cwd(), 'data', 'profile-views.json');
+  let views: ProfileView[] = [];
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    views = JSON.parse(content);
+  } catch {
+    // 文件不存在则从空数组开始
+  }
+  const newView: ProfileView = {
+    id: Date.now().toString(),
+    internId,
+    viewerName,
+    viewedAt: new Date().toISOString(),
+  };
+  views.push(newView);
+  await fs.writeFile(filePath, JSON.stringify(views, null, 2));
+}
+
+export async function getUnreadViewCount(internId: string, since: string): Promise<number> {
+  const views = await getProfileViews(internId);
+  return views.filter(v => new Date(v.viewedAt) > new Date(since)).length;
 }
