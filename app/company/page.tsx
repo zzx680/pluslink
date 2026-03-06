@@ -22,6 +22,7 @@ export default function CompanyPage() {
   const [filterEmployment, setFilterEmployment] = useState<FilterEmployment>('all');
   const [jobForm, setJobForm] = useState({
     companyName: '',
+    cohort: '',
     title: '',
     description: '',
     requirements: '',
@@ -52,11 +53,12 @@ export default function CompanyPage() {
       const response = await fetch('/api/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(jobForm)
+        body: JSON.stringify({ ...jobForm, inviteCode: sessionStorage.getItem('inviteCode') || undefined })
       });
       if (response.ok) {
+        sessionStorage.setItem('companyName', jobForm.companyName);
         alert('职位发布成功！');
-        setJobForm({ companyName: '', title: '', description: '', requirements: '', contact: '', baseLocation: '', workType: 'hybrid', employmentType: 'intern' });
+        setJobForm({ companyName: '', cohort: '', title: '', description: '', requirements: '', contact: '', baseLocation: '', workType: 'hybrid', employmentType: 'intern' });
         setShowPostJob(false);
       } else {
         alert('发布失败，请重试');
@@ -75,6 +77,22 @@ export default function CompanyPage() {
     const matchEmployment = filterEmployment === 'all' || i.employmentType === filterEmployment;
     return matchSearch && matchWork && matchEmployment;
   });
+
+  const handleViewIntern = async (intern: Intern) => {
+    setSelectedIntern(intern);
+    const companyName = sessionStorage.getItem('companyName');
+    if (companyName) {
+      try {
+        await fetch('/api/profile-views', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ internId: intern.id, viewerName: companyName }),
+        });
+      } catch (e) {
+        console.error('Failed to record view:', e);
+      }
+    }
+  };
 
   const inputClass = "w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none transition-all duration-200 text-gray-900 hover:border-gray-300";
 
@@ -127,11 +145,25 @@ export default function CompanyPage() {
                       className={inputClass} placeholder="请输入公司名称" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-gray-700">职位名称</label>
-                    <input type="text" required value={jobForm.title}
-                      onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
-                      className={inputClass} placeholder="例如：前端工程师" />
+                    <label className="block text-sm font-medium text-gray-700">届数</label>
+                    <select
+                      required
+                      value={jobForm.cohort}
+                      onChange={(e) => setJobForm({ ...jobForm, cohort: e.target.value })}
+                      className={inputClass}
+                    >
+                      <option value="">请选择届数</option>
+                      {['S22', 'F22', 'S23', 'F23', 'S24', 'F24', 'S25', 'F25', 'S26', 'F26'].map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-gray-700">职位名称</label>
+                  <input type="text" required value={jobForm.title}
+                    onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
+                    className={inputClass} placeholder="例如：前端工程师" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-gray-700">职位描述</label>
@@ -241,7 +273,7 @@ export default function CompanyPage() {
                 {filtered.map((intern) => (
                   <div
                     key={intern.id}
-                    onClick={() => setSelectedIntern(intern)}
+                    onClick={() => handleViewIntern(intern)}
                     className="group rounded-2xl border border-gray-200 p-5 cursor-pointer hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 bg-white"
                   >
                     {/* 头部 */}

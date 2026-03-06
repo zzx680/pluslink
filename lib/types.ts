@@ -19,6 +19,7 @@ export interface Intern {
 export interface Job {
   id: string;
   companyName: string;
+  cohort?: string; // 届数，例如 'S23', 'F24'
   title: string;
   description: string;
   requirements: string;
@@ -36,4 +37,11 @@ export interface InviteCode {
   usedBy?: string;
   usedAt?: string;
   createdAt: string;
+}
+
+export interface ProfileView {
+  id: string;
+  internId: string;        // 被查看的实习生ID
+  viewerName: string;      // 查看者名称（公司名）
+  viewedAt: string;        // 查看时间
 }

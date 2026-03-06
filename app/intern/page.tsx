@@ -32,6 +32,11 @@ function JobCard({ job }: { job: Job }) {
             }`}>
               {job.employmentType === 'intern' ? '实习' : '全职'}
             </span>
+            {job.cohort && (
+              <span className="px-2 py-0.5 text-xs font-medium rounded-full shrink-0 bg-blue-50 text-blue-600">
+                {job.cohort}届
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <span>{job.companyName}</span>
@@ -93,6 +98,9 @@ export default function InternPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentIntern, setCurrentIntern] = useState<Intern | null>(null);
   const [checkingIntern, setCheckingIntern] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [profileViews, setProfileViews] = useState<{ id: string; viewerName: string; viewedAt: string }[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [cardForm, setCardForm] = useState({
     name: '',
@@ -135,6 +143,8 @@ export default function InternPage() {
           employmentType: intern.employmentType
         });
         if (intern.resumeUrl) setResumeUrl(intern.resumeUrl);
+        // 加载查看记录
+        fetchProfileViews(intern.id);
       }
     } catch (error) {
       console.error('Failed to check intern:', error);
@@ -153,6 +163,26 @@ export default function InternPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchProfileViews = async (internId: string) => {
+    try {
+      const response = await fetch(`/api/profile-views?internId=${internId}`);
+      const views = await response.json();
+      setProfileViews(views);
+      // 未读数：上次查看通知时间之后的记录
+      const lastRead = localStorage.getItem('notificationsLastRead') || '1970-01-01';
+      const unread = views.filter((v: { viewedAt: string }) => new Date(v.viewedAt) > new Date(lastRead)).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error('Failed to fetch profile views:', error);
+    }
+  };
+
+  const handleOpenNotifications = () => {
+    setShowNotifications(true);
+    setUnreadCount(0);
+    localStorage.setItem('notificationsLastRead', new Date().toISOString());
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -256,7 +286,24 @@ export default function InternPage() {
           <Link href="/" className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-colors duration-200">
             Pluslink
           </Link>
-          <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">实习生端</span>
+          <div className="flex items-center gap-3">
+            {currentIntern && (
+              <button
+                onClick={handleOpenNotifications}
+                className="btn relative w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">实习生端</span>
+          </div>
         </div>
       </header>
 
@@ -491,6 +538,61 @@ export default function InternPage() {
           </div>
         )}
       </main>
+
+      {/* 通知弹窗 */}
+      {showNotifications && (
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6 backdrop-blur-sm"
+          onClick={() => setShowNotifications(false)}
+        >
+          <div
+            className="bg-white w-full max-w-md max-h-[80vh] overflow-hidden rounded-2xl shadow-xl animate-[modal-in_0.25s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">查看通知</h2>
+              <button
+                onClick={() => setShowNotifications(false)}
+                className="btn w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[60vh]">
+              {profileViews.length === 0 ? (
+                <div className="py-16 text-center">
+                  <svg className="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <p className="text-sm text-gray-500">暂无查看记录</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {profileViews.map((view) => (
+                    <div key={view.id} className="px-5 py-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">
+                          {view.viewerName.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{view.viewerName}</p>
+                          <p className="text-xs text-gray-500">查看了你的档案</p>
+                        </div>
+                        <span className="text-xs text-gray-400 shrink-0">
+                          {new Date(view.viewedAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getInterns, addIntern } from '@/lib/data';
+import { getInterns, addIntern, useInviteCode } from '@/lib/data';
 
 export async function GET() {
   try {
@@ -14,9 +14,13 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.name || !body.education || !body.position || !body.internshipPeriod || !body.contact || !body.startDate || !body.baseLocation || !body.workType || !body.employmentType) {
+    if (!body.name || !body.education || !body.position || !body.internshipPeriod || !body.contact || !body.startDate || !body.baseLocation || !body.workType || !body.employmentType || !body.inviteCode) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    // 标记邀请码为已使用，记录使用人
+    await useInviteCode(body.inviteCode, 'intern', body.name);
+
     const intern = await addIntern(body);
     return NextResponse.json(intern, { status: 201 });
   } catch (error) {
