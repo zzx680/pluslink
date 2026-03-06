@@ -67,7 +67,10 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <header className="border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-8 py-4 flex items-center justify-between">
-          <span className="text-xl font-semibold text-gray-900">PlusLink</span>
+          <div className="flex items-center gap-3">
+            <img src="/pluslink logo.png" alt="PlusLink" className="h-8 w-8 object-contain" />
+            <span className="text-xl font-semibold text-gray-900">PlusLink</span>
+          </div>
           <Link href="/admin" className="text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200">
             管理后台
           </Link>

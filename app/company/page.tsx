@@ -111,8 +111,9 @@ export default function CompanyPage() {
     <div className="min-h-screen bg-white">
       <header className="border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-colors duration-200">
-            Pluslink
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
+            <img src="/pluslink logo.png" alt="PlusLink" className="h-8 w-8 object-contain" />
+            <span className="text-xl font-semibold text-gray-900">Pluslink</span>
           </Link>
           <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">校友端</span>
         </div>
