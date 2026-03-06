@@ -42,7 +42,8 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-[#f7f7f7] flex items-center justify-center px-8">
       <div className="max-w-md w-full">
         <div className="text-center mb-12">
-          <Link href="/" className="inline-block mb-8">
+          <Link href="/" className="inline-flex items-center gap-3 justify-center mb-8 hover:opacity-80 transition-opacity">
+            <img src="/pluslink logo.png" alt="PlusLink" className="h-10 w-10 object-contain" />
             <h1 className="text-[32px] font-bold text-black">Pluslink</h1>
           </Link>
           <h2 className="text-[24px] font-semibold text-black mb-2">管理后台登录</h2>
