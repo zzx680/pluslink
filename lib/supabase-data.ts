@@ -9,6 +9,99 @@ function getClient() {
   return supabase;
 }
 
+// 注册用户
+export async function registerUser(
+  username: string,
+  password: string,
+  userType: 'intern' | 'company' | 'admin',
+  inviteCode: string,
+  displayName: string
+): Promise<{ userId: string; username: string }> {
+  // 检查用户名是否已存在
+  const { data: existingUser } = await getClient()
+    .from('users')
+    .select('id')
+    .eq('username', username)
+    .single();
+
+  if (existingUser) {
+    throw new Error('用户名已存在');
+  }
+
+  // 验证邀请码
+  const { data: inviteCodeData } = await getClient()
+    .from('invite_codes')
+    .select('*')
+    .eq('code', inviteCode)
+    .eq('type', userType)
+    .single();
+
+  if (!inviteCodeData) {
+    throw new Error('邀请码无效');
+  }
+
+  // 管理员邀请码不检查 used 状态
+  if (userType !== 'admin' && inviteCodeData.used) {
+    throw new Error('邀请码已被使用');
+  }
+
+  // 创建用户
+  const userId = Date.now().toString();
+  const { error: userError } = await getClient()
+    .from('users')
+    .insert({
+      id: userId,
+      username,
+      password, // TODO: 应该加密
+      user_type: userType,
+      invite_code: inviteCode,
+      display_name: displayName,
+      created_at: new Date().toISOString(),
+    });
+
+  if (userError) {
+    throw new Error(`创建用户失败: ${userError.message}`);
+  }
+
+  // 标记邀请码为已使用（管理员除外）
+  if (userType !== 'admin') {
+    await getClient()
+      .from('invite_codes')
+      .update({
+        used: true,
+        used_by: displayName,
+        used_at: new Date().toISOString(),
+      })
+      .eq('code', inviteCode);
+  }
+
+  return { userId, username };
+}
+
+// 用户登录
+export async function loginUser(
+  username: string,
+  password: string
+): Promise<{ userId: string; username: string; userType: string; displayName: string }> {
+  const { data: user, error } = await getClient()
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .eq('password', password) // TODO: 应该比较加密后的密码
+    .single();
+
+  if (error || !user) {
+    throw new Error('用户名或密码错误');
+  }
+
+  return {
+    userId: user.id,
+    username: user.username,
+    userType: user.user_type,
+    displayName: user.display_name,
+  };
+}
+
 // 获取所有实习生
 export async function getInterns(): Promise<Intern[]> {
   const { data, error } = await getClient()
@@ -225,12 +318,21 @@ export async function validateInviteCode(code: string, type: 'company' | 'intern
     return false;
   }
 
-  // 管理员邀请码可重复使用
+  // 管理员邀请码可多人重复使用，不检查 used 状态
   if (type === 'admin') {
     return true;
   }
 
-  return !data.used;
+  // 企业/实习生邀请码：未使用或已被同一用户使用
+  // 未使用：允许
+  if (!data.used) {
+    return true;
+  }
+
+  // 已使用：需要检查是否是同一用户（通过 used_by 字段）
+  // 但这里无法获取当前用户信息，所以返回 false
+  // 实际的"同一用户重复使用"逻辑在 useInviteCode 中处理
+  return false;
 }
 
 // 使用邀请码

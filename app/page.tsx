@@ -9,13 +9,138 @@ export default function Home() {
   const router = useRouter();
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
   const [userType, setUserType] = useState<'company' | 'intern' | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState('');
   const [shakeError, setShakeError] = useState(false);
 
+  // 登录表单
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loggingIn, setLoggingIn] = useState(false);
+
+  // 注册表单
+  const [registerForm, setRegisterForm] = useState({
+    username: '',
+    password: '',
+    confirmPassword: '',
+    displayName: ''
+  });
+  const [registering, setRegistering] = useState(false);
+
   const handleStartClick = () => setShowRoleModal(true);
+
+  // 处理登录
+  const handleLogin = async () => {
+    if (!loginForm.username.trim() || !loginForm.password.trim()) {
+      setError('请输入用户名和密码');
+      triggerShake();
+      return;
+    }
+
+    setLoggingIn(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        sessionStorage.setItem('userId', data.user.userId);
+        sessionStorage.setItem('username', data.user.username);
+        sessionStorage.setItem('userType', data.user.userType);
+        sessionStorage.setItem('displayName', data.user.displayName);
+        setShowLoginModal(false);
+
+        // 根据用户类型跳转
+        if (data.user.userType === 'intern') {
+          router.push('/intern');
+        } else if (data.user.userType === 'company') {
+          router.push('/company');
+        } else if (data.user.userType === 'admin') {
+          router.push('/admin');
+        }
+      } else {
+        setError(data.error || '登录失败');
+        triggerShake();
+      }
+    } catch (error) {
+      console.error('登录失败:', error);
+      setError('登录失败，请重试');
+      triggerShake();
+    } finally {
+      setLoggingIn(false);
+    }
+  };
+
+  // 处理注册
+  const handleRegister = async () => {
+    if (!registerForm.username.trim() || !registerForm.password.trim()) {
+      setError('请输入用户名和密码');
+      triggerShake();
+      return;
+    }
+
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setError('两次输入的密码不一致');
+      triggerShake();
+      return;
+    }
+
+    if (!registerForm.displayName.trim()) {
+      setError('请输入姓名');
+      triggerShake();
+      return;
+    }
+
+    setRegistering(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...registerForm,
+          userType,
+          inviteCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        sessionStorage.setItem('userId', data.userId);
+        sessionStorage.setItem('username', data.username);
+        sessionStorage.setItem('userType', userType!);
+        sessionStorage.setItem('displayName', registerForm.displayName);
+        setShowRegisterModal(false);
+
+        // 跳转到填写个人资料页面
+        if (userType === 'intern') {
+          router.push('/intern');
+        } else if (userType === 'company') {
+          router.push('/company');
+        }
+      } else {
+        setError(data.error || '注册失败');
+        triggerShake();
+      }
+    } catch (error) {
+      console.error('注册失败:', error);
+      setError('注册失败，请重试');
+      triggerShake();
+    } finally {
+      setRegistering(false);
+    }
+  };
 
   const handleRoleSelect = (type: 'company' | 'intern') => {
     setUserType(type);
@@ -47,9 +172,8 @@ export default function Home() {
       const data = await response.json();
       if (data.valid) {
         setShowInviteModal(false);
-        sessionStorage.setItem('inviteCode', inviteCode.toUpperCase());
-        sessionStorage.setItem('userType', userType!);
-        router.push(`/${userType}`);
+        // 验证通过后显示注册表单
+        setShowRegisterModal(true);
       } else {
         setError(data.error || '邀请码无效或已使用');
         triggerShake();
@@ -71,9 +195,14 @@ export default function Home() {
             <img src="/pluslink logo.png" alt="PlusLink" className="h-7 w-7 object-contain" />
             <span className="text-xl font-semibold text-gray-900">PlusLink</span>
           </div>
-          <Link href="/admin" className="text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200">
-            管理后台
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200">
+              登录
+            </Link>
+            <Link href="/admin" className="text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200">
+              管理后台
+            </Link>
+          </div>
         </div>
       </header>
 

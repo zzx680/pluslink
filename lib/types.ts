@@ -1,7 +1,19 @@
 // 数据类型定义
 
+// 用户账号（用于登录）
+export interface User {
+  id: string;
+  username: string;
+  password: string;              // TODO: 应该加密存储
+  userType: 'intern' | 'company' | 'admin';
+  inviteCode: string;            // 使用的邀请码
+  displayName: string;           // 实习生姓名或公司名称
+  createdAt: string;
+}
+
 export interface Intern {
   id: string;
+  userId: string;                // 关联 User 表
   inviteCode: string;
   name: string;
   education: string;
@@ -13,14 +25,16 @@ export interface Intern {
   workType: 'online' | 'offline' | 'hybrid';
   employmentType: 'intern' | 'full-time' | 'both';
   resumeUrl?: string;
-  recommendation?: string;      // 推荐语，最多50字
-  recommendedBy?: string;       // 推荐人姓名
+  recommendation?: string;
+  recommendedBy?: string;
   createdAt: string;
 }
 
 export interface Job {
   id: string;
   companyName: string;
+  username: string;              // 登录用户名
+  password: string;              // 登录密码
   cohort?: string; // 届数，例如 'S23', 'F24'
   website?: string; // 公司网址
   title: string;

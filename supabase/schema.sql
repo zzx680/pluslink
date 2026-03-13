@@ -82,7 +82,7 @@ CREATE POLICY "Allow all operations on profile_views" ON profile_views
 -- 插入默认邀请码（如果不存在）
 INSERT INTO invite_codes (code, type, used, created_at)
 VALUES
-  ('COMPANY2025', 'company', false, NOW()),
-  ('INTERN2025', 'intern', false, NOW()),
-  ('ADMIN2025', 'admin', false, NOW())
+  ('COMP25', 'company', false, NOW()),
+  ('INT25A', 'intern', false, NOW()),
+  ('ADM25A', 'admin', false, NOW())
 ON CONFLICT (code) DO NOTHING;

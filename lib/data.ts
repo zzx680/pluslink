@@ -1,4 +1,4 @@
-import { Intern, Job, InviteCode, ProfileView } from './types';
+import { Intern, Job, InviteCode, ProfileView, User } from './types';
 
 // 检查是否使用 Supabase
 const USE_SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -7,6 +7,33 @@ const USE_SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PU
 async function getSupabaseData() {
   const supabaseData = await import('./supabase-data');
   return supabaseData;
+}
+
+// 用户注册
+export async function registerUser(
+  username: string,
+  password: string,
+  userType: 'intern' | 'company' | 'admin',
+  inviteCode: string,
+  displayName: string
+): Promise<{ userId: string; username: string }> {
+  if (USE_SUPABASE) {
+    const { registerUser: supabaseRegisterUser } = await getSupabaseData();
+    return supabaseRegisterUser(username, password, userType, inviteCode, displayName);
+  }
+  throw new Error('仅支持 Supabase 模式');
+}
+
+// 用户登录
+export async function loginUser(
+  username: string,
+  password: string
+): Promise<{ userId: string; username: string; userType: string; displayName: string }> {
+  if (USE_SUPABASE) {
+    const { loginUser: supabaseLoginUser } = await getSupabaseData();
+    return supabaseLoginUser(username, password);
+  }
+  throw new Error('仅支持 Supabase 模式');
 }
 
 // 数据存储路径（JSON 模式）
@@ -50,9 +77,9 @@ export async function initializeData() {
         await fs.access(inviteCodesPath);
       } catch {
         const defaultCodes: InviteCode[] = [
-          { code: 'COMPANY2025', type: 'company', used: false, createdAt: new Date().toISOString() },
-          { code: 'INTERN2025', type: 'intern', used: false, createdAt: new Date().toISOString() },
-          { code: 'ADMIN2025', type: 'admin', used: false, createdAt: new Date().toISOString() }, // 默认管理员邀请码
+          { code: 'COMP25', type: 'company', used: false, createdAt: new Date().toISOString() },
+          { code: 'INT25A', type: 'intern', used: false, createdAt: new Date().toISOString() },
+          { code: 'ADM25A', type: 'admin', used: false, createdAt: new Date().toISOString() }, // 默认管理员邀请码
         ];
         await fs.writeFile(inviteCodesPath, JSON.stringify(defaultCodes, null, 2));
       }
