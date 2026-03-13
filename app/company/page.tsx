@@ -20,9 +20,12 @@ export default function CompanyPage() {
   const [search, setSearch] = useState('');
   const [filterWork, setFilterWork] = useState<FilterWorkType>('all');
   const [filterEmployment, setFilterEmployment] = useState<FilterEmployment>('all');
+  const [weeklyDigest, setWeeklyDigest] = useState<{ newThisWeek: number; total: number } | null>(null);
+  const [showDigestBanner, setShowDigestBanner] = useState(false);
   const [jobForm, setJobForm] = useState({
     companyName: '',
     cohort: '',
+    website: '',
     title: '',
     description: '',
     requirements: '',
@@ -32,7 +35,10 @@ export default function CompanyPage() {
     employmentType: 'intern' as 'intern' | 'full-time'
   });
 
-  useEffect(() => { fetchInterns(); }, []);
+  useEffect(() => {
+    fetchInterns();
+    fetchWeeklyDigest();
+  }, []);
 
   const fetchInterns = async () => {
     try {
@@ -44,6 +50,32 @@ export default function CompanyPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchWeeklyDigest = async () => {
+    const inviteCode = sessionStorage.getItem('inviteCode');
+    if (!inviteCode) return;
+
+    // 检查本周是否已经展示过通知
+    const lastShown = localStorage.getItem('weeklyDigestShown');
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    if (lastShown && Number(lastShown) > oneWeekAgo) return;
+
+    try {
+      const res = await fetch(`/api/company/weekly-digest?inviteCode=${inviteCode}`);
+      const data = await res.json();
+      if (data.newThisWeek > 0) {
+        setWeeklyDigest(data);
+        setShowDigestBanner(true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch weekly digest:', error);
+    }
+  };
+
+  const dismissDigest = () => {
+    setShowDigestBanner(false);
+    localStorage.setItem('weeklyDigestShown', String(Date.now()));
   };
 
   const handlePostJob = async (e: React.FormEvent) => {
@@ -58,7 +90,7 @@ export default function CompanyPage() {
       if (response.ok) {
         sessionStorage.setItem('companyName', jobForm.companyName);
         alert('职位发布成功！');
-        setJobForm({ companyName: '', cohort: '', title: '', description: '', requirements: '', contact: '', baseLocation: '', workType: 'hybrid', employmentType: 'intern' });
+        setJobForm({ companyName: '', cohort: '', website: '', title: '', description: '', requirements: '', contact: '', baseLocation: '', workType: 'hybrid', employmentType: 'intern' });
         setShowPostJob(false);
       } else {
         alert('发布失败，请重试');
@@ -110,9 +142,9 @@ export default function CompanyPage() {
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
-            <img src="/pluslink logo.png" alt="PlusLink" className="h-8 w-8 object-contain" />
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-200">
+            <img src="/pluslink logo.png" alt="PlusLink" className="h-7 w-7 object-contain" />
             <span className="text-xl font-semibold text-gray-900">Pluslink</span>
           </Link>
           <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">校友端</span>
@@ -159,6 +191,15 @@ export default function CompanyPage() {
                       ))}
                     </select>
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-gray-700">
+                    公司网址
+                    <span className="ml-1.5 text-xs font-normal text-gray-400">选填</span>
+                  </label>
+                  <input type="url" value={jobForm.website}
+                    onChange={(e) => setJobForm({ ...jobForm, website: e.target.value })}
+                    className={inputClass} placeholder="https://example.com" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-gray-700">职位名称</label>
@@ -219,6 +260,26 @@ export default function CompanyPage() {
           </div>
         ) : (
           <div className="animate-[fade-in_0.4s_ease-out]">
+            {/* 每周简历通知 banner */}
+            {showDigestBanner && weeklyDigest && (
+              <div className="mb-6 flex items-center justify-between bg-gray-900 text-white px-5 py-3.5 rounded-2xl animate-[fade-in_0.3s_ease-out]">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">📬</span>
+                  <span className="text-sm font-medium">
+                    本周新增 <span className="font-bold text-white">{weeklyDigest.newThisWeek}</span> 份实习生简历，共 {weeklyDigest.total} 份
+                  </span>
+                </div>
+                <button
+                  onClick={dismissDigest}
+                  className="btn w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors shrink-0"
+                >
+                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
             {/* 顶部标题栏 */}
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -275,42 +336,27 @@ export default function CompanyPage() {
                   <div
                     key={intern.id}
                     onClick={() => handleViewIntern(intern)}
-                    className="group rounded-2xl border border-gray-200 p-5 cursor-pointer hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 bg-white"
+                    className="group rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-gray-400 hover:shadow-sm transition-all duration-150 bg-white flex flex-col gap-3"
                   >
-                    {/* 头部 */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white text-sm font-semibold shrink-0">
-                        {intern.name.charAt(0)}
+                    {/* 姓名行 */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900 leading-tight">{intern.name}</h3>
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{intern.position}</p>
                       </div>
                       {intern.resumeUrl && (
-                        <span className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full">
-                          <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </span>
+                        <span className="shrink-0 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">简历</span>
                       )}
                     </div>
 
-                    {/* 姓名 + 岗位 */}
-                    <h3 className="text-sm font-semibold text-gray-900 mb-0.5">{intern.name}</h3>
-                    <p className="text-xs text-gray-500 mb-3 line-clamp-1">{intern.position}</p>
-
                     {/* 学历 */}
-                    <p className="text-xs text-gray-400 mb-3 line-clamp-1">{intern.education}</p>
+                    <p className="text-xs text-gray-400 line-clamp-1">{intern.education}</p>
 
                     {/* 标签 */}
-                    <div className="flex flex-wrap gap-1.5">
-                      <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">{intern.baseLocation}</span>
-                      <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">{WORK_TYPE_LABEL[intern.workType]}</span>
-                      <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
-                    </div>
-
-                    {/* 底部 */}
-                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-xs text-gray-400 group-hover:text-gray-600 transition-colors">查看详情</span>
-                      <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                    <div className="flex flex-wrap gap-1">
+                      <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{intern.baseLocation}</span>
+                      <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
+                      <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
                     </div>
                   </div>
                 ))}
@@ -332,14 +378,9 @@ export default function CompanyPage() {
           >
             {/* 弹窗头部 */}
             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-5 flex items-center justify-between rounded-t-2xl z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center text-white text-base font-semibold">
-                  {selectedIntern.name.charAt(0)}
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">{selectedIntern.name}</h2>
-                  <p className="text-sm text-gray-500">{selectedIntern.position}</p>
-                </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">{selectedIntern.name}</h2>
+                <p className="text-sm text-gray-500">{selectedIntern.position}</p>
               </div>
               <button
                 onClick={() => setSelectedIntern(null)}
@@ -374,6 +415,21 @@ export default function CompanyPage() {
                   <div className="text-sm font-semibold text-white">{selectedIntern.contact}</div>
                 </div>
               </div>
+
+              {/* 推荐语 */}
+              {selectedIntern.recommendation && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-4">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedIntern.recommendation}</p>
+                      <p className="text-xs text-blue-500 font-medium mt-2">— {selectedIntern.recommendedBy} 推荐</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* 简历预览 */}
               {selectedIntern.resumeUrl && (

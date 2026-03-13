@@ -66,9 +66,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/pluslink logo.png" alt="PlusLink" className="h-8 w-8 object-contain" />
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/pluslink logo.png" alt="PlusLink" className="h-7 w-7 object-contain" />
             <span className="text-xl font-semibold text-gray-900">PlusLink</span>
           </div>
           <Link href="/admin" className="text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200">
@@ -79,9 +79,18 @@ export default function Home() {
 
       <main className="max-w-5xl mx-auto px-8 py-16">
         <div className="text-center py-16 animate-[fade-in_0.5s_ease-out]">
-          <h1 className="text-5xl font-semibold text-gray-900 mb-4">奇绩创坛 PlusLink</h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <img src="/pluslink logo.png" alt="PlusLink" className="h-16 w-16 object-contain" />
+            <h1 className="text-5xl font-semibold text-gray-900">奇绩创坛 PlusLink</h1>
+          </div>
           <p className="text-xl text-gray-500 mb-12">一个低噪音的校友招聘系统</p>
-          <Button onClick={handleStartClick}>开始使用</Button>
+          <button
+            onClick={handleStartClick}
+            className="group relative px-8 py-3.5 bg-black/80 backdrop-blur-xl text-white text-base font-semibold rounded-full overflow-hidden transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 hover:shadow-2xl hover:shadow-purple-500/30 hover:scale-105 active:scale-95 border border-white/10"
+          >
+            <span className="relative z-10">开始使用</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </button>
         </div>
 
         <div className="py-16">

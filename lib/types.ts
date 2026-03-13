@@ -2,17 +2,19 @@
 
 export interface Intern {
   id: string;
-  inviteCode: string; // 关联的邀请码
+  inviteCode: string;
   name: string;
   education: string;
   position: string;
   internshipPeriod: string;
   contact: string;
-  startDate: string; // 多久入职
-  baseLocation: string; // base地点
-  workType: 'online' | 'offline' | 'hybrid'; // 线上/线下/混合
-  employmentType: 'intern' | 'full-time' | 'both'; // 实习/全职/都可以
-  resumeUrl?: string; // 简历文件路径
+  startDate: string;
+  baseLocation: string;
+  workType: 'online' | 'offline' | 'hybrid';
+  employmentType: 'intern' | 'full-time' | 'both';
+  resumeUrl?: string;
+  recommendation?: string;      // 推荐语，最多50字
+  recommendedBy?: string;       // 推荐人姓名
   createdAt: string;
 }
 
@@ -20,6 +22,7 @@ export interface Job {
   id: string;
   companyName: string;
   cohort?: string; // 届数，例如 'S23', 'F24'
+  website?: string; // 公司网址
   title: string;
   description: string;
   requirements: string;

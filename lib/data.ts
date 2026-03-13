@@ -1,6 +1,15 @@
 import { Intern, Job, InviteCode, ProfileView } from './types';
 
-// 数据存储路径
+// 检查是否使用 Supabase
+const USE_SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// 动态导入 Supabase 数据层
+async function getSupabaseData() {
+  const supabaseData = await import('./supabase-data');
+  return supabaseData;
+}
+
+// 数据存储路径（JSON 模式）
 const DATA_DIR = '/data';
 const INTERNS_FILE = `${DATA_DIR}/interns.json`;
 const JOBS_FILE = `${DATA_DIR}/jobs.json`;
@@ -8,6 +17,11 @@ const INVITE_CODES_FILE = `${DATA_DIR}/invite-codes.json`;
 
 // 初始化数据文件
 export async function initializeData() {
+  if (USE_SUPABASE) {
+    // Supabase 通过 SQL schema 初始化
+    return;
+  }
+
   if (typeof window === 'undefined') {
     const fs = await import('fs/promises');
     const path = await import('path');
@@ -49,6 +63,11 @@ export async function initializeData() {
 }
 
 export async function getInterns(): Promise<Intern[]> {
+  if (USE_SUPABASE) {
+    const { getInterns: supabaseGetInterns } = await getSupabaseData();
+    return supabaseGetInterns();
+  }
+
   if (typeof window !== 'undefined') return [];
   try {
     const fs = await import('fs/promises');
@@ -62,6 +81,11 @@ export async function getInterns(): Promise<Intern[]> {
 }
 
 export async function addIntern(intern: Omit<Intern, 'id' | 'createdAt'>): Promise<Intern> {
+  if (USE_SUPABASE) {
+    const { addIntern: supabaseAddIntern } = await getSupabaseData();
+    return supabaseAddIntern(intern);
+  }
+
   if (typeof window !== 'undefined') throw new Error('Cannot add intern on client');
   const fs = await import('fs/promises');
   const path = await import('path');
@@ -74,11 +98,21 @@ export async function addIntern(intern: Omit<Intern, 'id' | 'createdAt'>): Promi
 }
 
 export async function getInternByInviteCode(inviteCode: string): Promise<Intern | null> {
+  if (USE_SUPABASE) {
+    const { getInternByInviteCode: supabaseGetInternByInviteCode } = await getSupabaseData();
+    return supabaseGetInternByInviteCode(inviteCode);
+  }
+
   const interns = await getInterns();
   return interns.find(i => i.inviteCode === inviteCode) ?? null;
 }
 
 export async function updateIntern(id: string, updates: Partial<Omit<Intern, 'id' | 'inviteCode' | 'createdAt'>>): Promise<Intern | null> {
+  if (USE_SUPABASE) {
+    const { updateIntern: supabaseUpdateIntern } = await getSupabaseData();
+    return supabaseUpdateIntern(id, updates);
+  }
+
   if (typeof window !== 'undefined') throw new Error('Cannot update intern on client');
   const fs = await import('fs/promises');
   const path = await import('path');
@@ -92,6 +126,11 @@ export async function updateIntern(id: string, updates: Partial<Omit<Intern, 'id
 }
 
 export async function getJobs(): Promise<Job[]> {
+  if (USE_SUPABASE) {
+    const { getJobs: supabaseGetJobs } = await getSupabaseData();
+    return supabaseGetJobs();
+  }
+
   if (typeof window !== 'undefined') return [];
   try {
     const fs = await import('fs/promises');
@@ -105,6 +144,11 @@ export async function getJobs(): Promise<Job[]> {
 }
 
 export async function addJob(job: Omit<Job, 'id' | 'createdAt'>): Promise<Job> {
+  if (USE_SUPABASE) {
+    const { addJob: supabaseAddJob } = await getSupabaseData();
+    return supabaseAddJob(job);
+  }
+
   if (typeof window !== 'undefined') throw new Error('Cannot add job on client');
   const fs = await import('fs/promises');
   const path = await import('path');
@@ -117,6 +161,11 @@ export async function addJob(job: Omit<Job, 'id' | 'createdAt'>): Promise<Job> {
 }
 
 export async function getInviteCodes(): Promise<InviteCode[]> {
+  if (USE_SUPABASE) {
+    const { getInviteCodes: supabaseGetInviteCodes } = await getSupabaseData();
+    return supabaseGetInviteCodes();
+  }
+
   if (typeof window !== 'undefined') return [];
   try {
     const fs = await import('fs/promises');
@@ -130,6 +179,11 @@ export async function getInviteCodes(): Promise<InviteCode[]> {
 }
 
 export async function validateInviteCode(code: string, type: 'company' | 'intern' | 'admin'): Promise<boolean> {
+  if (USE_SUPABASE) {
+    const { validateInviteCode: supabaseValidateInviteCode } = await getSupabaseData();
+    return supabaseValidateInviteCode(code, type);
+  }
+
   const codes = await getInviteCodes();
   const inviteCode = codes.find(c => c.code === code && c.type === type);
   // 管理员邀请码可重复使用，不检查 used 状态
@@ -140,6 +194,11 @@ export async function validateInviteCode(code: string, type: 'company' | 'intern
 }
 
 export async function useInviteCode(code: string, type: 'company' | 'intern' | 'admin', usedBy: string): Promise<boolean> {
+  if (USE_SUPABASE) {
+    const { useInviteCode: supabaseUseInviteCode } = await getSupabaseData();
+    return supabaseUseInviteCode(code, type, usedBy);
+  }
+
   if (typeof window !== 'undefined') throw new Error('Cannot use invite code on client');
   const fs = await import('fs/promises');
   const path = await import('path');
@@ -155,6 +214,11 @@ export async function useInviteCode(code: string, type: 'company' | 'intern' | '
 }
 
 export async function createInviteCode(type: 'company' | 'intern' | 'admin'): Promise<InviteCode> {
+  if (USE_SUPABASE) {
+    const { createInviteCode: supabaseCreateInviteCode } = await getSupabaseData();
+    return supabaseCreateInviteCode(type);
+  }
+
   if (typeof window !== 'undefined') throw new Error('Cannot create invite code on client');
   const fs = await import('fs/promises');
   const path = await import('path');
@@ -172,6 +236,11 @@ export async function createInviteCode(type: 'company' | 'intern' | 'admin'): Pr
 }
 
 export async function deleteInviteCode(code: string): Promise<boolean> {
+  if (USE_SUPABASE) {
+    const { deleteInviteCode: supabaseDeleteInviteCode } = await getSupabaseData();
+    return supabaseDeleteInviteCode(code);
+  }
+
   if (typeof window !== 'undefined') throw new Error('Cannot delete invite code on client');
   const fs = await import('fs/promises');
   const path = await import('path');
@@ -184,6 +253,11 @@ export async function deleteInviteCode(code: string): Promise<boolean> {
 }
 
 export async function getProfileViews(internId: string): Promise<ProfileView[]> {
+  if (USE_SUPABASE) {
+    const { getProfileViews: supabaseGetProfileViews } = await getSupabaseData();
+    return supabaseGetProfileViews(internId);
+  }
+
   if (typeof window !== 'undefined') return [];
   try {
     const fs = await import('fs/promises');
@@ -198,6 +272,11 @@ export async function getProfileViews(internId: string): Promise<ProfileView[]> 
 }
 
 export async function addProfileView(internId: string, viewerName: string): Promise<void> {
+  if (USE_SUPABASE) {
+    const { addProfileView: supabaseAddProfileView } = await getSupabaseData();
+    return supabaseAddProfileView(internId, viewerName);
+  }
+
   if (typeof window !== 'undefined') return;
   const fs = await import('fs/promises');
   const path = await import('path');
@@ -220,6 +299,11 @@ export async function addProfileView(internId: string, viewerName: string): Prom
 }
 
 export async function getUnreadViewCount(internId: string, since: string): Promise<number> {
+  if (USE_SUPABASE) {
+    const { getUnreadViewCount: supabaseGetUnreadViewCount } = await getSupabaseData();
+    return supabaseGetUnreadViewCount(internId, since);
+  }
+
   const views = await getProfileViews(internId);
   return views.filter(v => new Date(v.viewedAt) > new Date(since)).length;
 }
