@@ -19,7 +19,7 @@ export default function InternRegisterPage() {
     startDate: '',
     baseLocation: '',
     workType: 'hybrid' as 'online' | 'offline' | 'hybrid',
-    employmentType: 'intern' as 'intern' | 'full-time' | 'both'
+    employmentType: 'intern' as 'intern' | 'full-time' | 'both',
     recommendation: '',
     recommendedBy: '',
   });
