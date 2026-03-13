@@ -1,0 +1,4 @@
+[     600ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://pluslink1.vercel.app/favicon.ico:0
+[   19361ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://pluslink1.vercel.app/api/upload/resume:0
+[   31395ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://pluslink1.vercel.app/api/upload/resume:0
+[   51512ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ https://pluslink1.vercel.app/api/upload/resume:0
