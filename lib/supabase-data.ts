@@ -116,6 +116,7 @@ export async function getInterns(): Promise<Intern[]> {
 
   return data.map(item => ({
     id: item.id,
+    userId: item.user_id,
     inviteCode: item.invite_code,
     name: item.name,
     education: item.education,
@@ -179,6 +180,7 @@ export async function getInternByInviteCode(inviteCode: string): Promise<Intern 
 
   return {
     id: data.id,
+    userId: data.user_id,
     inviteCode: data.invite_code,
     name: data.name,
     education: data.education,
@@ -241,6 +243,8 @@ export async function getJobs(): Promise<Job[]> {
   return data.map(item => ({
     id: item.id,
     companyName: item.company_name,
+    username: item.username ?? '',
+    password: item.password ?? '',
     cohort: item.cohort,
     website: item.website,
     title: item.title,
