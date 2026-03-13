@@ -77,8 +77,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Upload error:', error);
+    const msg = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: '上传失败，请重试' },
+      { error: `上传失败: ${msg}` },
       { status: 500 }
     );
   }
