@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
-    // 检查 Supabase 是否配置
-    if (!supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
         { error: 'Supabase 未配置，请检查环境变量' },
         { status: 500 }
       );
     }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -39,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     // 读取文件内容
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const buffer = new Uint8Array(bytes);
 
     // 上传到 Supabase Storage
     const { data, error } = await supabase.storage
