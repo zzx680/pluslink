@@ -347,22 +347,23 @@ export default function CompanyPage() {
                       <div
                         key={intern.id}
                         onClick={() => handleViewIntern(intern)}
-                        className="group rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-3 overflow-hidden border border-blue-200 hover:border-blue-400 hover:shadow-md bg-gradient-to-br from-slate-900 to-blue-950 p-4"
+                        className="group rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-3 overflow-hidden border-2 border-indigo-300 hover:border-indigo-500 hover:shadow-lg bg-gradient-to-br from-indigo-600 to-blue-800 p-4 relative"
                       >
+                        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-pink-300/60" />
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <h3 className="text-sm font-semibold text-white leading-tight">{intern.name}</h3>
-                            <p className="text-xs text-blue-300 mt-0.5 line-clamp-1">{intern.position}</p>
+                            <p className="text-xs text-blue-200 mt-0.5 line-clamp-1">{intern.position}</p>
                           </div>
                           {intern.resumeUrl && (
-                            <span className="shrink-0 px-1.5 py-0.5 bg-blue-900/60 text-blue-300 text-[10px] font-medium rounded border border-blue-700">简历</span>
+                            <span className="shrink-0 px-1.5 py-0.5 bg-white/20 text-white text-[10px] font-medium rounded border border-white/30">简历</span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-400 line-clamp-1">{intern.education}</p>
+                        <p className="text-xs text-blue-100/70 line-clamp-1">{intern.education}</p>
                         <div className="flex flex-wrap gap-1">
-                          <span className="px-2 py-0.5 bg-blue-900/40 border border-blue-800 text-blue-300 text-[11px] rounded">{intern.baseLocation}</span>
-                          <span className="px-2 py-0.5 bg-blue-900/40 border border-blue-800 text-blue-300 text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
-                          <span className="px-2 py-0.5 bg-blue-900/40 border border-blue-800 text-blue-300 text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
+                          <span className="px-2 py-0.5 bg-white/15 border border-white/25 text-white text-[11px] rounded">{intern.baseLocation}</span>
+                          <span className="px-2 py-0.5 bg-white/15 border border-white/25 text-white text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
+                          <span className="px-2 py-0.5 bg-white/15 border border-white/25 text-white text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
                         </div>
                       </div>
                     );
@@ -373,22 +374,23 @@ export default function CompanyPage() {
                       <div
                         key={intern.id}
                         onClick={() => handleViewIntern(intern)}
-                        className="group rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-3 overflow-hidden border border-amber-200 hover:border-amber-400 hover:shadow-md bg-gradient-to-br from-amber-50 to-orange-50 p-4"
+                        className="group rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-3 overflow-hidden border-2 border-pink-300 hover:border-pink-500 hover:shadow-lg bg-gradient-to-br from-pink-100 to-rose-300 p-4 relative"
                       >
+                        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400/60" />
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h3 className="text-sm font-semibold text-amber-900 leading-tight">{intern.name}</h3>
-                            <p className="text-xs text-amber-600 mt-0.5 line-clamp-1">{intern.position}</p>
+                            <h3 className="text-sm font-semibold text-rose-900 leading-tight">{intern.name}</h3>
+                            <p className="text-xs text-rose-600 mt-0.5 line-clamp-1">{intern.position}</p>
                           </div>
                           {intern.resumeUrl && (
-                            <span className="shrink-0 px-1.5 py-0.5 bg-amber-100 text-amber-600 text-[10px] font-medium rounded border border-amber-200">简历</span>
+                            <span className="shrink-0 px-1.5 py-0.5 bg-rose-200/60 text-rose-700 text-[10px] font-medium rounded border border-rose-300/50">简历</span>
                           )}
                         </div>
-                        <p className="text-xs text-amber-500/70 line-clamp-1">{intern.education}</p>
+                        <p className="text-xs text-rose-500/70 line-clamp-1">{intern.education}</p>
                         <div className="flex flex-wrap gap-1">
-                          <span className="px-2 py-0.5 bg-white/70 border border-amber-200 text-amber-700 text-[11px] rounded">{intern.baseLocation}</span>
-                          <span className="px-2 py-0.5 bg-white/70 border border-amber-200 text-amber-700 text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
-                          <span className="px-2 py-0.5 bg-white/70 border border-amber-200 text-amber-700 text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
+                          <span className="px-2 py-0.5 bg-white/60 border border-rose-200 text-rose-700 text-[11px] rounded">{intern.baseLocation}</span>
+                          <span className="px-2 py-0.5 bg-white/60 border border-rose-200 text-rose-700 text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
+                          <span className="px-2 py-0.5 bg-white/60 border border-rose-200 text-rose-700 text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
                         </div>
                       </div>
                     );
