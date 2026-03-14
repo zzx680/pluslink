@@ -280,6 +280,131 @@ export default function Home() {
         </div>
       )}
 
+      {showLoginModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center p-8 z-50 backdrop-blur-sm"
+          onClick={() => { setShowLoginModal(false); setError(''); }}
+        >
+          <div
+            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl animate-[modal-in_0.25s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">登录</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                <input
+                  type="text"
+                  value={loginForm.username}
+                  onChange={(e) => { setLoginForm({ ...loginForm, username: e.target.value }); setError(''); }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
+                  placeholder="请输入用户名"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                <input
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => { setLoginForm({ ...loginForm, password: e.target.value }); setError(''); }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
+                  placeholder="请输入密码"
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl text-red-600 px-4 py-2 text-sm text-center">
+                  {error}
+                </div>
+              )}
+              <div className="flex gap-3">
+                <Button onClick={handleLogin} loading={loggingIn} className="flex-1">
+                  {loggingIn ? '登录中' : '登录'}
+                </Button>
+                <Button variant="secondary" className="flex-1" onClick={() => { setShowLoginModal(false); setError(''); }}>
+                  取消
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRegisterModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center p-8 z-50 backdrop-blur-sm"
+          onClick={() => { setShowRegisterModal(false); setError(''); }}
+        >
+          <div
+            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl animate-[modal-in_0.25s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">创建账号</h2>
+            <p className="text-sm text-gray-500 mb-6 text-center">邀请码验证通过，请设置登录信息</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                <input
+                  type="text"
+                  value={registerForm.username}
+                  onChange={(e) => { setRegisterForm({ ...registerForm, username: e.target.value }); setError(''); }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
+                  placeholder="3-20位字母、数字"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                <input
+                  type="password"
+                  value={registerForm.password}
+                  onChange={(e) => { setRegisterForm({ ...registerForm, password: e.target.value }); setError(''); }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
+                  placeholder="6-20位密码"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                <input
+                  type="password"
+                  value={registerForm.confirmPassword}
+                  onChange={(e) => { setRegisterForm({ ...registerForm, confirmPassword: e.target.value }); setError(''); }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
+                  placeholder="再次输入密码"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {userType === 'intern' ? '姓名' : '公司名称'}
+                </label>
+                <input
+                  type="text"
+                  value={registerForm.displayName}
+                  onChange={(e) => { setRegisterForm({ ...registerForm, displayName: e.target.value }); setError(''); }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
+                  placeholder={userType === 'intern' ? '请输入姓名' : '请输入公司名称'}
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl text-red-600 px-4 py-2 text-sm text-center">
+                  {error}
+                </div>
+              )}
+              <div className="flex gap-3">
+                <Button onClick={handleRegister} loading={registering} className="flex-1">
+                  {registering ? '注册中' : '完成注册'}
+                </Button>
+                <Button variant="secondary" className="flex-1" onClick={() => { setShowRegisterModal(false); setError(''); }}>
+                  取消
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showInviteModal && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center p-8 z-50 backdrop-blur-sm"
