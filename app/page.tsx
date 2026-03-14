@@ -344,13 +344,22 @@ export default function Home() {
             <p className="text-sm text-gray-500 mb-6 text-center">邀请码验证通过，请设置登录信息</p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {userType === 'intern' ? '姓名' : '公司名称'}
+                </label>
                 <input
                   type="text"
-                  value={registerForm.username}
-                  onChange={(e) => { setRegisterForm({ ...registerForm, username: e.target.value }); setError(''); }}
+                  value={registerForm.displayName}
+                  onChange={(e) => {
+                    setRegisterForm({
+                      ...registerForm,
+                      displayName: e.target.value,
+                      username: e.target.value
+                    });
+                    setError('');
+                  }}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
-                  placeholder="3-20位字母、数字"
+                  placeholder={userType === 'intern' ? '请输入姓名' : '请输入公司名称'}
                   autoFocus
                 />
               </div>
@@ -370,21 +379,9 @@ export default function Home() {
                   type="password"
                   value={registerForm.confirmPassword}
                   onChange={(e) => { setRegisterForm({ ...registerForm, confirmPassword: e.target.value }); setError(''); }}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
-                  placeholder="再次输入密码"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {userType === 'intern' ? '姓名' : '公司名称'}
-                </label>
-                <input
-                  type="text"
-                  value={registerForm.displayName}
-                  onChange={(e) => { setRegisterForm({ ...registerForm, displayName: e.target.value }); setError(''); }}
                   onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none"
-                  placeholder={userType === 'intern' ? '请输入姓名' : '请输入公司名称'}
+                  placeholder="再次输入密码"
                 />
               </div>
               {error && (
