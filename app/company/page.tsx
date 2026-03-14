@@ -349,19 +349,18 @@ export default function CompanyPage() {
                         onClick={() => handleViewIntern(intern)}
                         className="group rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-3 overflow-hidden border-2 border-cyan-400/50 hover:border-cyan-400 hover:shadow-xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 relative"
                       >
-                        {/* Pioneer 徽章 */}
-                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-900 text-[9px] font-bold rounded-full uppercase tracking-wider shadow-lg">
-                          Pioneer
-                        </div>
                         <div className="flex items-start justify-between gap-2">
-                          <div>
+                          <div className="flex items-center gap-1.5">
                             <h3 className="text-sm font-semibold text-white leading-tight">{intern.name}</h3>
-                            <p className="text-xs text-cyan-300 mt-0.5 line-clamp-1">{intern.position}</p>
+                            <span className="px-1.5 py-0.5 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-900 text-[8px] font-bold rounded uppercase tracking-wide">
+                              Pioneer
+                            </span>
                           </div>
                           {intern.resumeUrl && (
                             <span className="shrink-0 px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 text-[10px] font-medium rounded border border-cyan-400/30">简历</span>
                           )}
                         </div>
+                        <p className="text-xs text-cyan-300 -mt-1.5 line-clamp-1">{intern.position}</p>
                         <p className="text-xs text-slate-400 line-clamp-1">{intern.education}</p>
                         <div className="flex flex-wrap gap-1">
                           <span className="px-2 py-0.5 bg-cyan-500/10 border border-cyan-400/20 text-cyan-200 text-[11px] rounded">{intern.baseLocation}</span>
@@ -379,19 +378,18 @@ export default function CompanyPage() {
                         onClick={() => handleViewIntern(intern)}
                         className="group rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-3 overflow-hidden border-2 border-rose-300 hover:border-rose-400 hover:shadow-xl bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100 p-4 relative"
                       >
-                        {/* Pioneer 徽章 */}
-                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-900 text-[9px] font-bold rounded-full uppercase tracking-wider shadow-lg">
-                          Pioneer
-                        </div>
                         <div className="flex items-start justify-between gap-2">
-                          <div>
+                          <div className="flex items-center gap-1.5">
                             <h3 className="text-sm font-semibold text-rose-900 leading-tight">{intern.name}</h3>
-                            <p className="text-xs text-rose-500 mt-0.5 line-clamp-1">{intern.position}</p>
+                            <span className="px-1.5 py-0.5 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-900 text-[8px] font-bold rounded uppercase tracking-wide">
+                              Pioneer
+                            </span>
                           </div>
                           {intern.resumeUrl && (
                             <span className="shrink-0 px-1.5 py-0.5 bg-rose-200/60 text-rose-700 text-[10px] font-medium rounded border border-rose-300/50">简历</span>
                           )}
                         </div>
+                        <p className="text-xs text-rose-500 -mt-1.5 line-clamp-1">{intern.position}</p>
                         <p className="text-xs text-rose-400/80 line-clamp-1">{intern.education}</p>
                         <div className="flex flex-wrap gap-1">
                           <span className="px-2 py-0.5 bg-white/70 border border-rose-200 text-rose-700 text-[11px] rounded">{intern.baseLocation}</span>
