@@ -284,7 +284,24 @@ export default function InternPage() {
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">结束时间</label>
-                    <input type="month" required value={cardForm.internshipPeriod.split(' - ')[1] || ''} onChange={e => { const start = cardForm.internshipPeriod.split(' - ')[0] || ''; setCardForm({ ...cardForm, internshipPeriod: `${start} - ${e.target.value}` }); }} className={inputClass} />
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="untilNow"
+                          checked={cardForm.internshipPeriod.split(' - ')[1] === '至今'}
+                          onChange={e => {
+                            const start = cardForm.internshipPeriod.split(' - ')[0] || '';
+                            setCardForm({ ...cardForm, internshipPeriod: `${start} - ${e.target.checked ? '至今' : ''}` });
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 accent-gray-900"
+                        />
+                        <label htmlFor="untilNow" className="text-xs text-gray-600 cursor-pointer">至今</label>
+                      </div>
+                      {cardForm.internshipPeriod.split(' - ')[1] !== '至今' && (
+                        <input type="month" required value={cardForm.internshipPeriod.split(' - ')[1] || ''} onChange={e => { const start = cardForm.internshipPeriod.split(' - ')[0] || ''; setCardForm({ ...cardForm, internshipPeriod: `${start} - ${e.target.value}` }); }} className={inputClass} />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
