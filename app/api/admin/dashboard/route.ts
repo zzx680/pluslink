@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getInterns, getJobs, getInviteCodes } from '@/lib/data';
+import { getInterns, getJobs, getInviteCodes, getAllProfileViews } from '@/lib/data';
 
 export async function GET() {
   try {
-    const [interns, jobs, inviteCodes] = await Promise.all([
+    const [interns, jobs, inviteCodes, allViews] = await Promise.all([
       getInterns(),
       getJobs(),
       getInviteCodes(),
+      getAllProfileViews(),
     ]);
 
     const now = new Date();
@@ -14,6 +15,7 @@ export async function GET() {
 
     const newInternsThisWeek = interns.filter(i => new Date(i.createdAt) > oneWeekAgo).length;
     const newJobsThisWeek = jobs.filter(j => new Date(j.createdAt) > oneWeekAgo).length;
+    const newMatchesThisWeek = allViews.filter(v => new Date(v.viewedAt) > oneWeekAgo).length;
 
     // 过去8周的实习生增长数据
     const weeklyInterns = Array.from({ length: 8 }, (_, i) => {
@@ -40,16 +42,28 @@ export async function GET() {
       .slice(0, 5)
       .map(({ id, companyName, title, baseLocation, createdAt }) => ({ id, companyName, title, baseLocation, createdAt }));
 
+    // 最近10条匹配记录
+    const recentMatches = allViews.slice(0, 10).map(v => ({
+      id: v.id,
+      internId: v.internId,
+      internName: v.internName,
+      viewerName: v.viewerName,
+      viewedAt: v.viewedAt,
+    }));
+
     return NextResponse.json({
       totalInterns: interns.length,
       totalJobs: jobs.length,
       newInternsThisWeek,
       newJobsThisWeek,
+      totalMatches: allViews.length,
+      newMatchesThisWeek,
       totalInviteCodes: inviteCodes.length,
       usedInviteCodes: inviteCodes.filter(c => c.used).length,
       weeklyInterns,
       recentInterns,
       recentJobs,
+      recentMatches,
     });
   } catch (error) {
     console.error('Dashboard error:', error);

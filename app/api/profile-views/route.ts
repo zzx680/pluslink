@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addProfileView, getProfileViews } from '@/lib/data';
 
-// 记录查看行为
+// 记录联系方式查看（同一公司对同一实习生只记录一次）
 export async function POST(request: NextRequest) {
   try {
     const { internId, viewerName } = await request.json();
     if (!internId || !viewerName) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
-    await addProfileView(internId, viewerName);
-    return NextResponse.json({ ok: true });
+    const result = await addProfileView(internId, viewerName);
+    return NextResponse.json({ ok: true, created: result.created });
   } catch (error) {
     console.error('Error recording view:', error);
     return NextResponse.json({ error: 'Failed to record view' }, { status: 500 });

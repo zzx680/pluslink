@@ -298,13 +298,21 @@ export async function getProfileViews(internId: string): Promise<ProfileView[]> 
   }
 }
 
-export async function addProfileView(internId: string, viewerName: string): Promise<void> {
+export async function getAllProfileViews(): Promise<(ProfileView & { internName?: string })[]> {
+  if (USE_SUPABASE) {
+    const { getAllProfileViews: supabaseGetAllProfileViews } = await getSupabaseData();
+    return supabaseGetAllProfileViews();
+  }
+  return [];
+}
+
+export async function addProfileView(internId: string, viewerName: string): Promise<{ created: boolean }> {
   if (USE_SUPABASE) {
     const { addProfileView: supabaseAddProfileView } = await getSupabaseData();
     return supabaseAddProfileView(internId, viewerName);
   }
 
-  if (typeof window !== 'undefined') return;
+  if (typeof window !== 'undefined') return { created: false };
   const fs = await import('fs/promises');
   const path = await import('path');
   const filePath = path.join(process.cwd(), 'data', 'profile-views.json');
@@ -315,6 +323,9 @@ export async function addProfileView(internId: string, viewerName: string): Prom
   } catch {
     // 文件不存在则从空数组开始
   }
+  if (views.some(v => v.internId === internId && v.viewerName === viewerName)) {
+    return { created: false };
+  }
   const newView: ProfileView = {
     id: Date.now().toString(),
     internId,
@@ -323,6 +334,7 @@ export async function addProfileView(internId: string, viewerName: string): Prom
   };
   views.push(newView);
   await fs.writeFile(filePath, JSON.stringify(views, null, 2));
+  return { created: true };
 }
 
 export async function getUnreadViewCount(internId: string, since: string): Promise<number> {

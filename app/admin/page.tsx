@@ -11,11 +11,14 @@ interface DashboardData {
   totalJobs: number;
   newInternsThisWeek: number;
   newJobsThisWeek: number;
+  totalMatches: number;
+  newMatchesThisWeek: number;
   totalInviteCodes: number;
   usedInviteCodes: number;
   weeklyInterns: { week: string; count: number }[];
   recentInterns: { id: string; name: string; position: string; baseLocation: string; createdAt: string }[];
   recentJobs: { id: string; companyName: string; title: string; baseLocation: string; createdAt: string }[];
+  recentMatches: { id: string; internId: string; internName?: string; viewerName: string; viewedAt: string }[];
 }
 
 type Tab = 'dashboard' | 'codes';
@@ -200,8 +203,8 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <StatCard label="实习生总数" value={dashboard.totalInterns} sub="累计注册" accent />
                   <StatCard label="职位总数" value={dashboard.totalJobs} sub="累计发布" />
-                  <StatCard label="本周新增实习生" value={dashboard.newInternsThisWeek} sub="过去7天" />
-                  <StatCard label="本周新增职位" value={dashboard.newJobsThisWeek} sub="过去7天" />
+                  <StatCard label="匹配总数" value={dashboard.totalMatches} sub="累计联系方式查看" />
+                  <StatCard label="本周新增匹配" value={dashboard.newMatchesThisWeek} sub="过去7天" />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -306,6 +309,44 @@ export default function AdminPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* 最近匹配记录 */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-base font-semibold text-gray-900">最近匹配记录</h2>
+                    <span className="text-xs text-gray-400">校友企业查看实习生联系方式</span>
+                  </div>
+                  {dashboard.recentMatches.length === 0 ? (
+                    <p className="text-sm text-gray-400 py-8 text-center">暂无匹配数据</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-100">
+                            <th className="text-left py-2 px-3 text-xs font-medium text-gray-400">实习生</th>
+                            <th className="text-left py-2 px-3 text-xs font-medium text-gray-400">校友企业</th>
+                            <th className="text-left py-2 px-3 text-xs font-medium text-gray-400">时间</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {dashboard.recentMatches.map((match) => (
+                            <tr key={match.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors duration-100">
+                              <td className="py-2.5 px-3">
+                                <span className="text-sm font-medium text-gray-900">{match.internName || match.internId}</span>
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <span className="text-sm text-gray-600">{match.viewerName}</span>
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <span className="text-xs text-gray-400">{timeAgo(match.viewedAt)}</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

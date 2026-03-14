@@ -412,10 +412,20 @@ export async function getProfileViews(internId: string): Promise<ProfileView[]> 
   }));
 }
 
-// 添加简历查看记录
-export async function addProfileView(internId: string, viewerName: string): Promise<void> {
-  const id = Date.now().toString();
+// 添加简历查看记录（同一公司对同一实习生只记录一次）
+export async function addProfileView(internId: string, viewerName: string): Promise<{ created: boolean }> {
+  const { data: existing } = await getClient()
+    .from('profile_views')
+    .select('id')
+    .eq('intern_id', internId)
+    .eq('viewer_name', viewerName)
+    .limit(1);
 
+  if (existing && existing.length > 0) {
+    return { created: false };
+  }
+
+  const id = Date.now().toString();
   const { error } = await getClient()
     .from('profile_views')
     .insert({
@@ -428,6 +438,28 @@ export async function addProfileView(internId: string, viewerName: string): Prom
   if (error) {
     console.error('Error adding profile view:', error);
   }
+  return { created: true };
+}
+
+// 获取所有匹配记录（管理后台用）
+export async function getAllProfileViews(): Promise<(ProfileView & { internName?: string })[]> {
+  const { data, error } = await getClient()
+    .from('profile_views')
+    .select('*, interns(name)')
+    .order('viewed_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching all profile views:', error);
+    return [];
+  }
+
+  return data.map(item => ({
+    id: item.id,
+    internId: item.intern_id,
+    viewerName: item.viewer_name,
+    viewedAt: item.viewed_at,
+    internName: item.interns?.name,
+  }));
 }
 
 // 获取未读查看数

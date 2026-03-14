@@ -22,6 +22,7 @@ export default function CompanyPage() {
   const [filterEmployment, setFilterEmployment] = useState<FilterEmployment>('all');
   const [weeklyDigest, setWeeklyDigest] = useState<{ newThisWeek: number; total: number } | null>(null);
   const [showDigestBanner, setShowDigestBanner] = useState(false);
+  const [revealedContacts, setRevealedContacts] = useState<Set<string>>(new Set());
   const [jobForm, setJobForm] = useState({
     companyName: '',
     cohort: '',
@@ -110,9 +111,14 @@ export default function CompanyPage() {
     return matchSearch && matchWork && matchEmployment;
   });
 
-  const handleViewIntern = async (intern: Intern) => {
+  const handleViewIntern = (intern: Intern) => {
     setSelectedIntern(intern);
-    const companyName = sessionStorage.getItem('companyName');
+  };
+
+  const handleRevealContact = async (intern: Intern, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const companyName = sessionStorage.getItem('companyName') || sessionStorage.getItem('displayName');
+    setRevealedContacts(prev => new Set(prev).add(intern.id));
     if (companyName) {
       try {
         await fetch('/api/profile-views', {
@@ -121,7 +127,7 @@ export default function CompanyPage() {
           body: JSON.stringify({ internId: intern.id, viewerName: companyName }),
         });
       } catch (e) {
-        console.error('Failed to record view:', e);
+        console.error('Failed to record match:', e);
       }
     }
   };
@@ -332,34 +338,86 @@ export default function CompanyPage() {
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filtered.map((intern) => (
-                  <div
-                    key={intern.id}
-                    onClick={() => handleViewIntern(intern)}
-                    className="group rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-gray-400 hover:shadow-sm transition-all duration-150 bg-white flex flex-col gap-3"
-                  >
-                    {/* 姓名行 */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900 leading-tight">{intern.name}</h3>
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{intern.position}</p>
+                {filtered.map((intern) => {
+                  const isCharlie = intern.id === '1773391768748';
+                  const isChenQu = intern.id === '1773459369131';
+
+                  if (isCharlie) {
+                    return (
+                      <div
+                        key={intern.id}
+                        onClick={() => handleViewIntern(intern)}
+                        className="group rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-3 overflow-hidden border border-blue-200 hover:border-blue-400 hover:shadow-md bg-gradient-to-br from-slate-900 to-blue-950 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="text-sm font-semibold text-white leading-tight">{intern.name}</h3>
+                            <p className="text-xs text-blue-300 mt-0.5 line-clamp-1">{intern.position}</p>
+                          </div>
+                          {intern.resumeUrl && (
+                            <span className="shrink-0 px-1.5 py-0.5 bg-blue-900/60 text-blue-300 text-[10px] font-medium rounded border border-blue-700">简历</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400 line-clamp-1">{intern.education}</p>
+                        <div className="flex flex-wrap gap-1">
+                          <span className="px-2 py-0.5 bg-blue-900/40 border border-blue-800 text-blue-300 text-[11px] rounded">{intern.baseLocation}</span>
+                          <span className="px-2 py-0.5 bg-blue-900/40 border border-blue-800 text-blue-300 text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
+                          <span className="px-2 py-0.5 bg-blue-900/40 border border-blue-800 text-blue-300 text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
+                        </div>
                       </div>
-                      {intern.resumeUrl && (
-                        <span className="shrink-0 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">简历</span>
-                      )}
-                    </div>
+                    );
+                  }
 
-                    {/* 学历 */}
-                    <p className="text-xs text-gray-400 line-clamp-1">{intern.education}</p>
+                  if (isChenQu) {
+                    return (
+                      <div
+                        key={intern.id}
+                        onClick={() => handleViewIntern(intern)}
+                        className="group rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-3 overflow-hidden border border-amber-200 hover:border-amber-400 hover:shadow-md bg-gradient-to-br from-amber-50 to-orange-50 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="text-sm font-semibold text-amber-900 leading-tight">{intern.name}</h3>
+                            <p className="text-xs text-amber-600 mt-0.5 line-clamp-1">{intern.position}</p>
+                          </div>
+                          {intern.resumeUrl && (
+                            <span className="shrink-0 px-1.5 py-0.5 bg-amber-100 text-amber-600 text-[10px] font-medium rounded border border-amber-200">简历</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-amber-500/70 line-clamp-1">{intern.education}</p>
+                        <div className="flex flex-wrap gap-1">
+                          <span className="px-2 py-0.5 bg-white/70 border border-amber-200 text-amber-700 text-[11px] rounded">{intern.baseLocation}</span>
+                          <span className="px-2 py-0.5 bg-white/70 border border-amber-200 text-amber-700 text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
+                          <span className="px-2 py-0.5 bg-white/70 border border-amber-200 text-amber-700 text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
+                        </div>
+                      </div>
+                    );
+                  }
 
-                    {/* 标签 */}
-                    <div className="flex flex-wrap gap-1">
-                      <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{intern.baseLocation}</span>
-                      <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
-                      <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
+                  return (
+                    <div
+                      key={intern.id}
+                      onClick={() => handleViewIntern(intern)}
+                      className="group rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-gray-400 hover:shadow-sm transition-all duration-150 bg-white flex flex-col gap-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 leading-tight">{intern.name}</h3>
+                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{intern.position}</p>
+                        </div>
+                        {intern.resumeUrl && (
+                          <span className="shrink-0 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">简历</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 line-clamp-1">{intern.education}</p>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{intern.baseLocation}</span>
+                        <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{WORK_TYPE_LABEL[intern.workType]}</span>
+                        <span className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] rounded">{EMPLOYMENT_LABEL[intern.employmentType]}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -412,7 +470,19 @@ export default function CompanyPage() {
                 {/* 联系方式占满一行 */}
                 <div className="col-span-2 bg-gray-900 rounded-xl px-4 py-3">
                   <div className="text-xs text-gray-400 mb-1">联系方式</div>
-                  <div className="text-sm font-semibold text-white">{selectedIntern.contact}</div>
+                  {revealedContacts.has(selectedIntern.id) ? (
+                    <div className="text-sm font-semibold text-white">{selectedIntern.contact}</div>
+                  ) : (
+                    <button
+                      onClick={(e) => handleRevealContact(selectedIntern, e)}
+                      className="btn text-sm font-semibold text-gray-400 hover:text-white transition-colors duration-150 flex items-center gap-2"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      </svg>
+                      点击显示联系方式
+                    </button>
+                  )}
                 </div>
               </div>
 
