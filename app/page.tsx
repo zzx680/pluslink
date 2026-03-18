@@ -121,6 +121,7 @@ export default function Home() {
         sessionStorage.setItem('username', data.username);
         sessionStorage.setItem('userType', userType!);
         sessionStorage.setItem('displayName', registerForm.displayName);
+        sessionStorage.setItem('inviteCode', inviteCode.toUpperCase());
         setShowRegisterModal(false);
 
         // 跳转到填写个人资料页面
