@@ -339,8 +339,6 @@ export default function CompanyPage() {
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filtered.map((intern) => {
-                  const isPioneer = intern.id === '1773391768748' || intern.id === '1773459369131';
-
                   return (
                     <div
                       key={intern.id}
@@ -348,13 +346,8 @@ export default function CompanyPage() {
                       className="group rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-gray-400 hover:shadow-sm transition-all duration-150 bg-white flex flex-col gap-3"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="min-w-0">
                           <h3 className="text-sm font-semibold text-gray-900 leading-tight">{intern.name}</h3>
-                          {isPioneer && (
-                            <span className="shrink-0 px-1.5 py-0.5 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-900 text-[8px] font-bold rounded uppercase tracking-wide">
-                              Pioneer
-                            </span>
-                          )}
                         </div>
                         {intern.resumeUrl && (
                           <span className="shrink-0 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">简历</span>
