@@ -173,8 +173,20 @@ export default function InternPage() {
   };
 
   const checkExistingIntern = async () => {
-    const inviteCode = sessionStorage.getItem('inviteCode');
-    if (!inviteCode) { setCheckingIntern(false); return; }
+    let inviteCode = sessionStorage.getItem('inviteCode');
+    if (!inviteCode) {
+      const username = sessionStorage.getItem('username');
+      if (!username) { setCheckingIntern(false); return; }
+      try {
+        const res = await fetch(`/api/auth/me?username=${encodeURIComponent(username)}`);
+        const data = await res.json();
+        if (data.inviteCode) {
+          inviteCode = data.inviteCode;
+          sessionStorage.setItem('inviteCode', data.inviteCode);
+        }
+      } catch { /* ignore */ }
+      if (!inviteCode) { setCheckingIntern(false); return; }
+    }
     try {
       const res = await fetch(`/api/interns/by-invite?code=${inviteCode}`);
       const intern: Intern | null = await res.json();
