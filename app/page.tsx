@@ -57,6 +57,7 @@ export default function Home() {
         sessionStorage.setItem('username', data.user.username);
         sessionStorage.setItem('userType', data.user.userType);
         sessionStorage.setItem('displayName', data.user.displayName);
+        sessionStorage.setItem('inviteCode', data.user.inviteCode);
         setShowLoginModal(false);
 
         // 根据用户类型跳转

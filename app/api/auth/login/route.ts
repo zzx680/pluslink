@@ -30,6 +30,7 @@ export async function POST(request: Request) {
         username: user.username,
         userType: user.user_type,
         displayName: user.display_name,
+        inviteCode: user.invite_code,
       },
     });
   } catch (error) {
