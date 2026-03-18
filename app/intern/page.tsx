@@ -173,22 +173,10 @@ export default function InternPage() {
   };
 
   const checkExistingIntern = async () => {
-    let inviteCode = sessionStorage.getItem('inviteCode');
-    if (!inviteCode) {
-      const username = sessionStorage.getItem('username');
-      if (!username) { setCheckingIntern(false); return; }
-      try {
-        const res = await fetch(`/api/auth/me?username=${encodeURIComponent(username)}`);
-        const data = await res.json();
-        if (data.inviteCode) {
-          inviteCode = data.inviteCode;
-          sessionStorage.setItem('inviteCode', data.inviteCode);
-        }
-      } catch { /* ignore */ }
-      if (!inviteCode) { setCheckingIntern(false); return; }
-    }
+    const username = sessionStorage.getItem('username');
+    if (!username) { setCheckingIntern(false); return; }
     try {
-      const res = await fetch(`/api/interns/by-invite?code=${inviteCode}`);
+      const res = await fetch(`/api/interns/by-username?username=${encodeURIComponent(username)}`);
       const intern: Intern | null = await res.json();
       if (intern) {
         setCurrentIntern(intern);
@@ -236,8 +224,8 @@ export default function InternPage() {
 
   const handleSubmitCard = async (e: React.FormEvent) => {
     e.preventDefault();
-    const inviteCode = sessionStorage.getItem('inviteCode');
-    if (!inviteCode) { alert('邀请码信息丢失，请重新登录'); router.push('/'); return; }
+    const username = sessionStorage.getItem('username');
+    if (!username) { alert('登录信息丢失，请重新登录'); router.push('/'); return; }
     setSubmitting(true);
     try {
       const payload = {
@@ -258,7 +246,7 @@ export default function InternPage() {
         const res = await fetch('/api/interns', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...payload, inviteCode }),
+          body: JSON.stringify({ ...payload, username }),
         });
         if (res.ok) {
           const newIntern = await res.json();

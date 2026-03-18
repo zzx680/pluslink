@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getInterns, addIntern, useInviteCode } from '@/lib/data';
+import { getInterns, addIntern } from '@/lib/data';
 
 export async function GET() {
   try {
@@ -14,14 +14,28 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.name || !body.education || !body.position || !body.internshipPeriod || !body.contact || !body.startDate || !body.baseLocation || !body.workType || !body.employmentType || !body.inviteCode) {
+    if (!body.name || !body.education || !body.position || !body.internshipPeriod || !body.contact || !body.startDate || !body.baseLocation || !body.workType || !body.employmentType || !body.username) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 标记邀请码为已使用，记录使用人
-    await useInviteCode(body.inviteCode, 'intern', body.name);
+    // 通过 username 查询用户的 inviteCode
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-    const intern = await addIntern(body);
+    const { data: user } = await supabase
+      .from('users')
+      .select('invite_code')
+      .eq('username', body.username)
+      .single();
+
+    if (!user || !user.invite_code) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const intern = await addIntern({ ...body, inviteCode: user.invite_code });
     return NextResponse.json(intern, { status: 201 });
   } catch (error) {
     console.error('Error creating intern:', error);

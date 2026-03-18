@@ -120,13 +120,13 @@ export default function InternPage() {
   }, []);
 
   const checkExistingIntern = async () => {
-    const inviteCode = sessionStorage.getItem('inviteCode');
-    if (!inviteCode) {
+    const username = sessionStorage.getItem('username');
+    if (!username) {
       setCheckingIntern(false);
       return;
     }
     try {
-      const response = await fetch(`/api/interns/by-invite?code=${inviteCode}`);
+      const response = await fetch(`/api/interns/by-username?username=${encodeURIComponent(username)}`);
       const intern: Intern | null = await response.json();
       if (intern) {
         setCurrentIntern(intern);
@@ -225,9 +225,9 @@ export default function InternPage() {
     e.preventDefault();
     setSubmitting(true);
 
-    const inviteCode = sessionStorage.getItem('inviteCode');
-    if (!inviteCode) {
-      alert('邀请码信息丢失，请重新登录');
+    const username = sessionStorage.getItem('username');
+    if (!username) {
+      alert('登录信息丢失，请重新登录');
       router.push('/');
       return;
     }
@@ -249,7 +249,7 @@ export default function InternPage() {
         const response = await fetch('/api/interns', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...cardForm, inviteCode, resumeUrl: resumeUrl || undefined })
+          body: JSON.stringify({ ...cardForm, username, resumeUrl: resumeUrl || undefined })
         });
         if (response.ok) {
           const newIntern = await response.json();
