@@ -361,9 +361,9 @@ export default function InternPage() {
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium text-gray-700">
                   可入职时间
-                  <span className="text-red-500 ml-1">*</span>
+                  <span className="ml-1.5 text-xs font-normal text-gray-400">选填</span>
                 </label>
-                <select required value={cardForm.startDate} onChange={e => setCardForm({ ...cardForm, startDate: e.target.value })} className={inputClass}>
+                <select value={cardForm.startDate} onChange={e => setCardForm({ ...cardForm, startDate: e.target.value })} className={inputClass}>
                   <option value="">请选择</option>
                   <option value="随时">随时</option>
                   <option value="1个月内">1个月内</option>
