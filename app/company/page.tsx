@@ -23,6 +23,8 @@ export default function CompanyPage() {
   const [weeklyDigest, setWeeklyDigest] = useState<{ newThisWeek: number; total: number } | null>(null);
   const [showDigestBanner, setShowDigestBanner] = useState(false);
   const [revealedContacts, setRevealedContacts] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 28; // 4列 × 7行
   const [jobForm, setJobForm] = useState({
     companyName: '',
     cohort: '',
@@ -40,6 +42,10 @@ export default function CompanyPage() {
     fetchInterns();
     fetchWeeklyDigest();
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, filterWork, filterEmployment]);
 
   const fetchInterns = async () => {
     try {
@@ -118,6 +124,9 @@ export default function CompanyPage() {
     if (!a.resumeUrl && b.resumeUrl) return 1;
     return 0;
   });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedInterns = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleViewIntern = (intern: Intern) => {
     setSelectedIntern(intern);
@@ -346,7 +355,7 @@ export default function CompanyPage() {
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filtered.map((intern) => {
+                {paginatedInterns.map((intern) => {
                   return (
                     <div
                       key={intern.id}
@@ -372,6 +381,34 @@ export default function CompanyPage() {
                   );
                 })}
               </div>
+              {/* 分页器 */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-6">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    上一页
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-9 h-9 text-sm rounded-lg ${p === page ? 'bg-gray-900 text-white' : 'border border-gray-200 hover:bg-gray-50'}`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    下一页
+                  </button>
+                </div>
+              )}
             )}
           </div>
         )}
