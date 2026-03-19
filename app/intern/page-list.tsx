@@ -333,31 +333,33 @@ export default function InternPage() {
           <div className="max-w-2xl animate-[fade-in_0.3s_ease-out]">
             <form onSubmit={handleSubmitCard} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-gray-700">姓名</label>
+                <label className="block text-sm font-medium text-gray-700">姓名 <span className="text-red-500">*</span></label>
                 <input type="text" required value={cardForm.name}
                   onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })}
                   className={inputClass} placeholder="请输入您的姓名" />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">学历</label>
+                <label className="block text-sm font-medium text-gray-700">学历 <span className="text-red-500">*</span></label>
                 <input type="text" required value={cardForm.education}
                   onChange={(e) => setCardForm({ ...cardForm, education: e.target.value })}
                   className={inputClass} placeholder="例如：北京大学 计算机科学 本科" />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">奇绩实习岗位</label>
+                <label className="block text-sm font-medium text-gray-700">奇绩实习岗位 <span className="text-red-500">*</span></label>
                 <input type="text" required value={cardForm.position}
                   onChange={(e) => setCardForm({ ...cardForm, position: e.target.value })}
                   className={inputClass} placeholder="例如：前端开发实习生" />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">实习时间</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  实习时间
+                  <span className="ml-1.5 text-xs font-normal text-gray-400">选填</span>
+                </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">开始时间</label>
                     <input
                       type="month"
-                      required
                       value={cardForm.internshipPeriod.split(' - ')[0] || ''}
                       onChange={(e) => {
                         const end = cardForm.internshipPeriod.split(' - ')[1] || '';
@@ -370,7 +372,6 @@ export default function InternPage() {
                     <label className="block text-xs text-gray-500 mb-1">结束时间</label>
                     <input
                       type="month"
-                      required
                       value={cardForm.internshipPeriod.split(' - ')[1] || ''}
                       onChange={(e) => {
                         const start = cardForm.internshipPeriod.split(' - ')[0] || '';
@@ -382,20 +383,20 @@ export default function InternPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">可入职时间</label>
+                <label className="block text-sm font-medium text-gray-700">可入职时间 <span className="text-red-500">*</span></label>
                 <input type="text" required value={cardForm.startDate}
                   onChange={(e) => setCardForm({ ...cardForm, startDate: e.target.value })}
                   className={inputClass} placeholder="例如：随时、1个月后、2026年4月" />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Base地点</label>
+                <label className="block text-sm font-medium text-gray-700">Base地点 <span className="text-red-500">*</span></label>
                 <input type="text" required value={cardForm.baseLocation}
                   onChange={(e) => setCardForm({ ...cardForm, baseLocation: e.target.value })}
                   className={inputClass} placeholder="例如：北京、上海、深圳" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">工作方式</label>
+                  <label className="block text-sm font-medium text-gray-700">工作方式 <span className="text-red-500">*</span></label>
                   <select required value={cardForm.workType}
                     onChange={(e) => setCardForm({ ...cardForm, workType: e.target.value as 'online' | 'offline' | 'hybrid' })}
                     className={inputClass}>
@@ -405,7 +406,7 @@ export default function InternPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">期望职位类型</label>
+                  <label className="block text-sm font-medium text-gray-700">期望职位类型 <span className="text-red-500">*</span></label>
                   <select required value={cardForm.employmentType}
                     onChange={(e) => setCardForm({ ...cardForm, employmentType: e.target.value as 'intern' | 'full-time' | 'both' })}
                     className={inputClass}>
@@ -416,7 +417,7 @@ export default function InternPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">联系方式</label>
+                <label className="block text-sm font-medium text-gray-700">联系方式 <span className="text-red-500">*</span></label>
                 <input type="text" required value={cardForm.contact}
                   onChange={(e) => setCardForm({ ...cardForm, contact: e.target.value })}
                   className={inputClass} placeholder="手机号或微信" />
