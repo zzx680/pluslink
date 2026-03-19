@@ -104,11 +104,17 @@ export default function CompanyPage() {
     }
   };
 
+  const PINNED_ID = '1773887162898'; // 李秦置顶
+
   const filtered = interns.filter(i => {
     const matchSearch = !search || i.name.includes(search) || i.position.includes(search) || i.baseLocation.includes(search) || i.education.includes(search);
     const matchWork = filterWork === 'all' || i.workType === filterWork;
     const matchEmployment = filterEmployment === 'all' || i.employmentType === filterEmployment;
     return matchSearch && matchWork && matchEmployment;
+  }).sort((a, b) => {
+    if (a.id === PINNED_ID) return -1;
+    if (b.id === PINNED_ID) return 1;
+    return 0;
   });
 
   const handleViewIntern = (intern: Intern) => {
