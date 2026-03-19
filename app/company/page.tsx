@@ -358,7 +358,7 @@ export default function CompanyPage() {
                           <h3 className="text-sm font-semibold text-gray-900 leading-tight">{intern.name}</h3>
                         </div>
                         {intern.resumeUrl && (
-                          <span className="shrink-0 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">简历</span>
+                          <span className="shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-medium rounded">简历</span>
                         )}
                       </div>
                       <p className="text-xs text-gray-500 -mt-1.5 line-clamp-1">{intern.position}</p>
