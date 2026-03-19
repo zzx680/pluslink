@@ -21,7 +21,7 @@ interface DashboardData {
   recentMatches: { id: string; internId: string; internName?: string; viewerName: string; viewedAt: string }[];
 }
 
-type Tab = 'dashboard' | 'codes';
+type Tab = 'dashboard' | 'codes' | 'views';
 
 function StatCard({ label, value, sub, accent }: { label: string; value: number; sub?: string; accent?: boolean }) {
   return (
@@ -67,8 +67,11 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<'company' | 'intern' | 'admin' | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
+  const [allViews, setAllViews] = useState<{ id: string; internName: string; viewerName: string; viewedAt: string }[]>([]);
+  const [viewsLoading, setViewsLoading] = useState(false);
 
   useEffect(() => { checkAuth(); }, []);
+  useEffect(() => { if (tab === 'views' && allViews.length === 0) fetchAllViews(); }, [tab]);
 
   const checkAuth = async () => {
     try {
@@ -97,6 +100,19 @@ export default function AdminPage() {
       console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllViews = async () => {
+    setViewsLoading(true);
+    try {
+      const res = await fetch('/api/admin/profile-views');
+      const data = await res.json();
+      setAllViews(data);
+    } catch (error) {
+      console.error('Failed to fetch views:', error);
+    } finally {
+      setViewsLoading(false);
     }
   };
 
@@ -163,6 +179,7 @@ export default function AdminPage() {
               {([
                 { key: 'dashboard', label: 'Dashboard' },
                 { key: 'codes', label: '邀请码管理' },
+                { key: 'views', label: '查看记录' },
               ] as { key: Tab; label: string }[]).map(({ key, label }) => (
                 <button
                   key={key}
@@ -436,6 +453,71 @@ export default function AdminPage() {
                           <button onClick={() => handleDeleteCode(code.code)} className="btn text-sm text-gray-400 hover:text-red-600 transition-colors duration-150">
                             删除
                           </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── 查看记录 Tab ── */}
+        {tab === 'views' && (
+          <div className="animate-[fade-in_0.4s_ease-out]">
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900">查看记录</h1>
+                <p className="text-sm text-gray-500 mt-1">校友查看实习生联系方式的完整记录</p>
+              </div>
+              <button onClick={fetchAllViews} className="btn text-sm text-gray-500 hover:text-gray-900 transition-colors">刷新</button>
+            </div>
+
+            {viewsLoading ? (
+              <div className="flex items-center justify-center py-32">
+                <span className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+              </div>
+            ) : allViews.length === 0 ? (
+              <div className="text-center py-32 border-2 border-dashed border-gray-200 rounded-2xl bg-white">
+                <p className="text-sm text-gray-500">暂无查看记录</p>
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <span className="text-sm text-gray-500">共 {allViews.length} 条记录</span>
+                </div>
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      {['校友', '实习生', '时间'].map(h => (
+                        <th key={h} className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allViews.map((view) => (
+                      <tr key={view.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors duration-100">
+                        <td className="py-3 px-6">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                              {view.viewerName.charAt(0)}
+                            </div>
+                            <span className="text-sm font-medium text-gray-900">{view.viewerName}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-6">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-xs font-semibold shrink-0">
+                              {view.internName.charAt(0)}
+                            </div>
+                            <span className="text-sm text-gray-700">{view.internName}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-6">
+                          <span className="text-sm text-gray-400">
+                            {new Date(view.viewedAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </td>
                       </tr>
                     ))}
