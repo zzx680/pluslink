@@ -114,6 +114,8 @@ export default function CompanyPage() {
   }).sort((a, b) => {
     if (a.id === PINNED_ID) return -1;
     if (b.id === PINNED_ID) return 1;
+    if (a.resumeUrl && !b.resumeUrl) return -1;
+    if (!a.resumeUrl && b.resumeUrl) return 1;
     return 0;
   });
 
