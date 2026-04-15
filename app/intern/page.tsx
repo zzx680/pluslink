@@ -236,6 +236,8 @@ export default function InternPage() {
     try {
       const payload = {
         ...cardForm,
+        internshipPeriod: cardForm.internshipPeriod.trim() || undefined,
+        startDate: cardForm.startDate || undefined,
         resumeUrl: resumeUrl || undefined,
         recommendation: cardForm.recommendation.trim() || undefined,
         recommendedBy: cardForm.recommendation.trim() ? cardForm.recommendedBy.trim() || undefined : undefined,
@@ -533,6 +535,7 @@ export default function InternPage() {
                 <p className="text-sm text-gray-500">{jobs.length === 0 ? '暂无招聘职位' : '没有符合条件的职位'}</p>
               </div>
             ) : (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedJobs.map(job => <JobCardSimple key={job.id} job={job} onClick={() => setSelectedJob(job)} />)}
               </div>
@@ -564,6 +567,7 @@ export default function InternPage() {
                   </button>
                 </div>
               )}
+              </>
             )}
           </>
         )}
